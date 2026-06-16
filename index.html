@@ -1,963 +1,1949 @@
+
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IMPACTO SOCIAL | 2026</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;700;900&family=Syncopate:wght@700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://unpkg.com/scrollreveal"></script>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Eco do Medo: O Observador - FNAF Special Edition</title>
+    <!-- Tailwind CSS para estilização flexível -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Three.js principal -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        :root {
-            --bg: #050000; /* Um preto levemente avermelhado */
-            --accent: #ff0000;
-            --accent-glow: rgba(255, 0, 0, 0.15);
-            --text-main: #ffffff;
-            --text-dim: #a0a0a0;
-            --card-bg: rgba(10, 10, 10, 0.8);
-            --border: #1a1a1a;
-            --transition: cubic-bezier(0.2, 0.8, 0.2, 1);
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #000000;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        
-        body { 
-            background-color: var(--bg);
-            /* FADES VERMELHOS DISCRETOS NO FUNDO */
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255, 0, 0, 0.08) 0%, transparent 40%),
-                radial-gradient(circle at 90% 50%, rgba(180, 0, 0, 0.05) 0%, transparent 35%),
-                radial-gradient(circle at 20% 80%, rgba(255, 0, 0, 0.06) 0%, transparent 40%);
-            background-attachment: fixed;
-            color: var(--text-main); 
-            font-family: 'Inter', sans-serif; 
-            overflow-x: hidden;
-            line-height: 1.6;
+        /* Efeito Clássico CRT e Vinheta de Câmera de Monitoramento */
+        .vignette {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            box-shadow: inset 0 0 160px rgba(0,0,0,1), inset 0 0 320px rgba(0,0,0,0.98);
+            pointer-events: none;
+            z-index: 10;
         }
 
-        /* Removido os pseudo-elementos antigos para usar o gradiente dinâmico do body */
+        .scanlines {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.4) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.05), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.05));
+            background-size: 100% 3px, 6px 100%;
+            pointer-events: none;
+            z-index: 12;
+        }
 
-        .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; position: relative; }
+        /* Estática de Tela Analógica Pesada */
+        .noise {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(0,0,0,0) 0%, rgba(0,0,0,0.95) 100%),
+                        url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.98' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.16'/%3E%3C/svg%3E");
+            pointer-events: none;
+            z-index: 11;
+        }
 
-        header {
-            height: 100vh;
-            display: flex;
+        /* Bloqueio de Orientação de Tela Paisagem */
+        #landscape-request {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background-color: #030304;
+            z-index: 100;
             flex-direction: column;
             justify-content: center;
             align-items: center;
+            color: #fff;
             text-align: center;
-            border-bottom: 1px solid var(--border);
+            padding: 24px;
         }
 
-        header span { 
-            font-family: 'Syncopate'; font-size: 0.8rem; letter-spacing: 0.5em; 
-            color: var(--accent); margin-bottom: 20px; text-shadow: 0 0 10px var(--accent);
-        }
-
-        h1 { 
-            font-size: clamp(2.5rem, 8vw, 6rem); font-weight: 900; letter-spacing: -0.04em; 
-            line-height: 1; margin-bottom: 40px;
-            background: linear-gradient(to bottom, #fff, #888);
-            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-        }
-
-        .counter-box {
-            background: rgba(255, 0, 0, 0.03);
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            backdrop-filter: blur(10px);
-            padding: 25px;
-            margin-bottom: 40px;
-            text-align: center;
-            border-radius: 4px;
-        }
-
-        .counter-number {
-            font-family: 'Syncopate'; font-size: clamp(2rem, 5vw, 3.5rem);
-            color: var(--accent); display: block; 
-            text-shadow: 0 0 15px rgba(255, 0, 0, 0.4);
-        }
-
-        .btn-main {
-            background: transparent; color: var(--text-main); padding: 18px 40px;
-            font-weight: 700; text-transform: uppercase; font-size: 0.75rem;
-            letter-spacing: 2px; border: 1px solid var(--text-main);
-            cursor: pointer; transition: 0.4s var(--transition);
-        }
-
-        .btn-main:hover { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 30px var(--accent-glow); }
-
-        section { padding: 80px 0; }
-        .section-label { font-family: 'Syncopate'; font-size: 0.7rem; color: var(--accent); margin-bottom: 40px; display: block; }
-
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .chart-card {
-            background: var(--card-bg);
-            border: 1px solid var(--border);
-            padding: 30px;
-            backdrop-filter: blur(5px);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .tab-menu { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
-        
-        .tab-btn {
-            background: transparent; border: 1px solid var(--border);
-            padding: 15px; text-align: left; cursor: pointer; transition: 0.2s;
-            color: var(--text-dim);
-        }
-
-        .tab-btn.active { border-left: 4px solid var(--accent); background: rgba(255,255,255,0.02); color: #fff; }
-        .tab-btn h4 { font-size: 0.8rem; text-transform: uppercase; }
-
-        .chart-container { position: relative; min-height: 350px; width: 100%; }
-
-        .quiz-box {
-            background: var(--card-bg); padding: 40px;
-            border: 1px solid var(--border); position: relative; overflow: hidden;
-            backdrop-filter: blur(5px);
-        }
-
-        #timer-bar {
-            position: absolute; top: 0; left: 0; height: 4px;
-            background: var(--accent); width: 100%; transition: width 1s linear;
-        }
-
-        .opt-btn {
-            display: block; width: 100%; padding: 18px;
-            background: rgba(10, 10, 10, 0.8); border: 1px solid var(--border);
-            color: white; text-align: left; margin-bottom: 10px;
-            cursor: pointer; transition: 0.3s;
-        }
-
-        .opt-btn:hover { border-color: var(--accent); transform: translateX(10px); background: rgba(255,0,0,0.05); }
-        .correct { background: #00ff8822 !important; border-color: #00ff88 !important; }
-        .wrong { background: #ff000022 !important; border-color: #ff0000 !important; }
-
-        footer { padding: 60px 0; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 0.7rem; color: var(--text-dim); }
-
-        .info-grid-modern {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
-        }
-
-        .interactive-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid #1a1a1a;
-            padding: 30px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            cursor: pointer;
-            backdrop-filter: blur(5px);
-        }
-
-        .interactive-card:hover {
-            border-color: #ff0000;
-            background: rgba(255, 0, 0, 0.05);
-            transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.1);
-        }
-
-        .interactive-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: #ff0000;
-            transition: width 0.5s ease;
-        }
-
-        .interactive-card:hover::after { width: 100%; }
-
-        .interactive-card h3 {
-            font-family: 'Syncopate', sans-serif;
-            font-size: 0.8rem;
-            color: #ff0000;
-            margin-bottom: 15px;
-            letter-spacing: 2px;
-        }
-
-        .interactive-card p {
-            font-size: 0.9rem;
-            color: #a0a0a0;
-            line-height: 1.6;
-            transition: color 0.3s;
-        }
-
-        .interactive-card:hover p { color: #ffffff; }
-
-        @keyframes fadeInUp {
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .reveal-card {
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeInUp 0.8s forwards;
-        }
-
-        @media (max-width: 900px) {
-            .dashboard-grid { grid-template-columns: 1fr; }
-            footer { flex-direction: column; gap: 20px; text-align: center; }
-            footer div:last-child { text-align: center; }
-        }
-    /* =============================
-   GLOW DINÂMICO GLOBAL
-============================= */
-
-#bg-glow{
-    position:fixed;
-    inset:0;
-    pointer-events:none;
-    z-index:-1;
-    background:
-        radial-gradient(
-            circle 320px at var(--x,50%) var(--y,50%),
-            rgba(255,0,0,0.12),
-            transparent 60%
-        );
-    transition:background .08s linear;
-}
-    /* =============================
-   BOTÃO MAGNÉTICO SUAVE
-============================= */
-
-.btn-main{
-    position:relative;
-    overflow:hidden;
-}
-
-.btn-main::after{
-    content:"";
-    position:absolute;
-    top:0;
-    left:-120%;
-    width:120%;
-    height:100%;
-    background:linear-gradient(
-        120deg,
-        transparent,
-        rgba(255,255,255,.25),
-        transparent
-    );
-    transition:.6s;
-}
-
-.btn-main:hover::after{
-    left:120%;
-}
-
-
-/* =============================
-   CARDS 3D LEVE
-============================= */
-
-.interactive-card{
-    transform-style:preserve-3d;
-    will-change:transform;
-}
-    #creditos {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(5, 0, 0, 0.98); /* Quase preto sólido */
-    color: white;
-    display: none;
-    overflow: hidden;
-    z-index: 10000;
-    backdrop-filter: blur(10px);
-}
-
-.fechar-creditos {
-    position: fixed;
-    top: 30px;
-    right: 30px;
-    background: transparent;
-    color: var(--accent);
-    border: 1px solid var(--accent);
-    padding: 10px 20px;
-    font-family: 'Syncopate';
-    font-size: 0.7rem;
-    cursor: pointer;
-    z-index: 10001;
-    transition: 0.3s;
-}
-
-.fechar-creditos:hover {
-    background: var(--accent);
-    color: white;
-    box-shadow: 0 0 20px var(--accent);
-}
-
-.creditos-conteudo {
-    position: absolute;
-    width: 100%;
-    text-align: center;
-    top: 100%; /* Começa fora da tela embaixo */
-}
-
-/* Animação de subida suave */
-.animar-subida {
-    animation: subir-creditos 30s linear forwards;
-}
-
-.creditos-conteudo h1 {
-    font-family: 'Syncopate';
-    font-size: clamp(2rem, 5vw, 4rem);
-    margin: 20px 0 60px 0;
-    letter-spacing: 15px;
-    color: #fff;
-}
-
-.creditos-secao {
-    margin-bottom: 60px;
-}
-
-.creditos-secao h2 {
-    font-family: 'Syncopate';
-    color: var(--accent);
-    font-size: 1rem;
-    margin-bottom: 20px;
-    opacity: 0.8;
-}
-
-.creditos-secao p {
-    font-size: 1.4rem;
-    font-weight: 300;
-    margin: 10px 0;
-    letter-spacing: 2px;
-}
-
-.creditos-final {
-    margin-top: 100px;
-    padding-bottom: 100px;
-    font-family: 'Syncopate';
-    font-size: 0.8rem;
-}
-
-@keyframes subir-creditos {
-    from { top: 100%; }
-    to { top: -150%; } /* Ajuste aqui dependendo do tamanho do seu texto */
-}
-
-    </style>
-</head>
-<body>
-   
-<div id="bg-glow"></div>
-    <div class="container">
-        <header>
-            <span class="reveal">PROJETO CONSCIENTIZAÇÃO • 2026</span>
-            <h1 class="reveal">CONTRA A <br>VIOLÊNCIA FÍSICA</h1>
-            
-            <div class="counter-box reveal">
-                <p style="font-size: 0.6rem; letter-spacing: 2px; margin-bottom: 10px; color: var(--text-dim);">ESTIMATIVA DE FEMINICÍDIOS EM 2026</p>
-                <span id="fem-counter" class="counter-number">--</span>
-                <p id="timer-label" style="font-size: 0.6rem; color: var(--text-dim); margin-top: 10px;">PRÓXIMO REGISTRO EM: 02:00</p>
-            </div>
-
-            <button class="btn-main reveal" onclick="document.getElementById('stats').scrollIntoView()">Analisar Dados</button>
-        </header>
-
-        <section id="stats">
-            <span class="section-label reveal">                Dados Dinâmicos</span>
-            <div class="dashboard-grid reveal">
-                
-                <div class="chart-card">
-                    <h4 style="margin-bottom: 10px; font-size: 0.8rem; color: #fff;">TIPOS DE AGRESSÃO FÍSICA</h4>
-                    <p style="font-size: 0.7rem; color: var(--text-dim); margin-bottom: 20px;">Clique ou passe o mouse para expandir os dados.</p>
-                    <div class="chart-container">
-                        <canvas id="pizzaChart"></canvas>
-                    </div>
-                </div>
-
-                <div class="chart-card">
-                    <div class="tab-menu">
-                        <button class="tab-btn active" onclick="updateBar(0, this)">
-                            <h4>Evolução Mensal</h4>
-                            <p>Casos por 100 mil mulheres.</p>
-                        </button>
-                        <button class="tab-btn" onclick="updateBar(1, this)">
-                            <h4>Cenário do Crime</h4>
-                            <p>Locais de maior incidência.</p>
-                        </button>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="barChart"></canvas>
-                    </div>
-                </div>
-
-            </div>
-        </section>
-
-        <div class="info-section">
-    <style>
-        .info-grid-modern {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-            padding: 20px 0;
-        }
-
-        .interactive-card {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid #1a1a1a;
-            padding: 30px;
-            position: relative;
-            overflow: hidden;
-            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
-            cursor: pointer;
-        }
-
-        /* Efeito de brilho ao passar o mouse */
-        .interactive-card:hover {
-            border-color: #ff0000;
-            background: rgba(255, 0, 0, 0.05);
-            transform: translateY(-10px);
-            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.1);
-        }
-
-        /* Barra de progresso animada no card */
-        .interactive-card::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 0;
-            height: 2px;
-            background: #ff0000;
-            transition: width 0.5s ease;
-        }
-
-        .interactive-card:hover::after {
-            width: 100%;
-        }
-
-        .interactive-card h3 {
-            font-family: 'Syncopate', sans-serif;
-            font-size: 0.8rem;
-            color: #ff0000;
-            margin-bottom: 15px;
-            letter-spacing: 2px;
-        }
-
-        .interactive-card p {
-            font-size: 0.9rem;
-            color: #a0a0a0;
-            line-height: 1.6;
-            transition: color 0.3s;
-        }
-
-        .interactive-card:hover p {
-            color: #ffffff;
-        }
-
-        /* Animação de entrada (Fade-in Up) */
-        .reveal-card {
-            opacity: 0;
-            transform: translateY(30px);
-            animation: fadeInUp 0.8s forwards;
-        }
-
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
+        @media (orientation: portrait) {
+            #landscape-request {
+                display: flex;
             }
         }
-            .impacto{
-text-align:center;
-padding:120px 20px;
-}
 
-.impacto-grid{
-display:flex;
-gap:40px;
-justify-content:center;
-flex-wrap:wrap;
-margin-top:50px;
-}
+        /* Animação de Glitch / Tremor de Texto FNAF */
+        @keyframes textGlitch {
+            0%, 100% { transform: translate(0); text-shadow: none; }
+            10% { transform: translate(-2px, 1px); text-shadow: -1px -1px #ff0000, 1px 1px #00ffff; }
+            20% { transform: translate(1px, -1px); text-shadow: 1px -1px #00ff00, -1px 1px #ff00ff; }
+            30% { transform: translate(-1px, 2px); }
+            40% { transform: translate(2px, -2px); text-shadow: -2px 1px #0000ff; }
+            50% { transform: translate(-1px, -1px); }
+        }
 
-.count{
-font-size:4rem;
-color:#ff0000;
-font-weight:900;
-}
+        .glitch-title {
+            animation: textGlitch 1.5s infinite;
+        }
+
+        @keyframes noiseFlicker {
+            0%, 100% { opacity: 0.16; }
+            50% { opacity: 0.28; }
+            95% { opacity: 0.12; }
+        }
+
+        .heavy-interference {
+            animation: noiseFlicker 0.03s infinite;
+            filter: contrast(1.8) brightness(0.7);
+        }
+
+        /* Estilo Joystick Mobile */
+        .joystick-zone {
+            position: absolute;
+            bottom: 30px;
+            left: 55px;
+            width: 95px;
+            height: 95px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            z-index: 30;
+            display: none;
+            touch-action: none;
+        }
+
+        .joystick-button {
+            position: absolute;
+            top: 22.5px;
+            left: 22.5px;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            box-shadow: 0 0 20px rgba(0,0,0,0.9);
+        }
     </style>
-<section class="impacto reveal">
+</head>
+<body class="flex items-center justify-center">
 
-<h2>Realidade em números</h2>
+    <!-- Aviso de Orientação Horizontal para Celulares -->
+    <div id="landscape-request">
+        <svg class="w-14 h-14 mb-4 text-red-700 animate-pulse" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" transform="rotate(90 12 12)"></path>
+        </svg>
+        <h2 class="text-lg font-bold tracking-[0.2em] text-red-700 mb-1">VISÃO DE SEGURANÇA REQUERIDA</h2>
+        <p class="text-zinc-600 text-xs max-w-sm">Deite o seu dispositivo para calibrar os sistemas de vigilância e visualização periférica.</p>
+    </div>
 
-<div class="impacto-grid">
-<div><span class="count" data-target="68">0</span>%<p>das agressões ocorrem dentro de casa</p></div>
-<div><span class="count" data-target="2">0</span>min<p>entre casos registrados</p></div>
-<div><span class="count" data-target="72">0</span>%<p>envolvem parceiros ou ex</p></div>
-</div>
+    <!-- Filtros de Lente / Estática Analógica -->
+    <div class="vignette"></div>
+    <div class="scanlines"></div>
+    <div id="screen-noise" class="noise"></div>
 
-</section>
-</section>
-    <div class="info-grid-modern">
-        <div class="interactive-card reveal-card" style="animation-delay: 0.1s;">
-            <h3>CICLO DA VIOLÊNCIA</h3>
-            <p>O abuso não começa físico. Ele evolui da tensão para o incidente e a falsa "lua de mel". Identificar o padrão é o primeiro passo para a ruptura.</p>
-        </div>
-
-        <div class="interactive-card reveal-card" style="animation-delay: 0.2s;">
-            <h3>ISOLAMENTO SOCIAL</h3>
-            <p>Em 2026, 72% dos casos graves ocorrem onde a vítima é afastada de redes de apoio. O silêncio é a ferramenta principal do agressor.</p>
-        </div>
-
-        <div class="interactive-card reveal-card" style="animation-delay: 0.3s;">
-            <h3>CANAL DE DENÚNCIA</h3>
-            <p>O Ligue 180 é gratuito, anônimo e vital. Em 2026, o atendimento foi digitalizado para garantir proteção imediata via GPS em casos críticos.</p>
+    <!-- TELA DE ADVERTÊNCIA INICIAL (ESTILO INDIE CLÁSSICO / FNAF) -->
+    <div id="warning-screen" class="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black p-6 text-center select-none">
+        <div class="max-w-xl space-y-6">
+            <h3 class="text-red-700 text-xs tracking-[0.4em] font-bold uppercase">ADVERTÊNCIA DE SEGURANÇA</h3>
+            <p class="text-zinc-400 text-xs leading-relaxed tracking-wider">
+                Esta experiência interativa contém cenas de tensão psicológica extrema, efeitos de luzes estroboscópicas instáveis, sons de alta intensidade e jumpscares imprevisíveis.
+            </p>
+            <p class="text-zinc-600 text-[10px] tracking-widest">
+                Se tiver problemas cardíacos ou propensão a convulsões por flashes, não continue.
+            </p>
+            <button id="warning-agree-btn" class="px-8 py-3 mt-4 border border-zinc-800 hover:border-red-600 hover:text-red-500 text-zinc-400 text-xs tracking-[0.25em] transition-all duration-300 uppercase">
+                Prosseguir para Incursão
+            </button>
         </div>
     </div>
-</div>
 
-        <section id="conscientizacao" style="background: rgba(255, 0, 0, 0.02); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);">
-    <div class="container">
-        <span class="section-label reveal">PROJETO ESCOLAR • SALA 2 REG 6</span>
+    <!-- MENU PRINCIPAL CINEMÁTICO (ESTILO FNAF OFICIAL) -->
+    <div id="main-menu" class="absolute inset-0 z-30 flex flex-col justify-between bg-transparent p-10 md:p-16 select-none opacity-0 transition-opacity duration-1000 hidden">
+        <!-- Detalhes de Câmera e Relógio (Canto Superior) -->
+        <div class="flex justify-between items-start text-zinc-500 text-[10px] tracking-widest">
+            <div class="flex flex-col gap-1">
+                <span>SYSTEM_BOOT: OK_09.47</span>
+                <span>FEED_CAMERA: ACTIVE</span>
+            </div>
+            <div class="text-right">
+                <span>SALA DE SEGURANÇA B-4</span>
+                <span class="block text-red-600 animate-pulse">MONITORAMENTO REATIVO</span>
+            </div>
+        </div>
+
+        <!-- Conteúdo Central Esquerdo do Menu -->
+        <div class="my-auto space-y-8 max-w-lg">
+            <div>
+                <h1 class="text-4xl md:text-6xl font-black text-red-700 tracking-[0.2em] leading-none glitch-title uppercase">
+                    ECO DO MEDO
+                </h1>
+                <h2 class="text-sm md:text-base text-zinc-400 tracking-[0.4em] uppercase mt-1 pl-1">
+                    O OBSERVADOR
+                </h2>
+            </div>
+
+            <!-- Opções de Menu FNAF Style -->
+            <div class="space-y-3 text-xs md:text-sm tracking-[0.3em] font-bold text-left pl-1">
+                <button id="menu-start-btn" class="group flex items-center gap-3 text-white hover:text-red-500 transition-colors uppercase block">
+                    <span class="opacity-0 group-hover:opacity-100 text-red-600 transition-opacity duration-200">▶</span>
+                    Iniciar Novo Turno
+                </button>
+                <button id="menu-config-btn" class="group flex items-center gap-3 text-zinc-500 hover:text-white transition-colors uppercase block">
+                    <span class="opacity-0 group-hover:opacity-100 text-red-600 transition-opacity duration-200">▶</span>
+                    Calibração
+                </button>
+                <button id="menu-guide-btn" class="group flex items-center gap-3 text-zinc-500 hover:text-white transition-colors uppercase block">
+                    <span class="opacity-0 group-hover:opacity-100 text-red-600 transition-opacity duration-200">▶</span>
+                    Diretrizes
+                </button>
+            </div>
+        </div>
+
+        <!-- Rodapé do Menu -->
+        <div class="flex justify-between items-end text-zinc-600 text-[10px] tracking-wider">
+            <span>STABLE BUILD 1.8.2_C</span>
+            <span>© 1987 FAZBEAR SYSTEM INTEGRATIONS</span>
+        </div>
+
+        <!-- Painel de Calibração (FNAF Settings) -->
+        <div id="calibration-overlay" class="absolute inset-0 bg-black/95 z-40 flex items-center justify-center p-6 hidden">
+            <div class="w-full max-w-md bg-zinc-950 border border-zinc-900 rounded p-6 space-y-6">
+                <div class="flex justify-between items-center border-b border-zinc-900 pb-3">
+                    <h3 class="text-red-600 text-xs font-bold tracking-widest uppercase">CALIBRAÇÃO DE INTRUSÃO</h3>
+                    <button id="close-calibration-btn" class="text-zinc-500 hover:text-white text-xs uppercase">[Fechar]</button>
+                </div>
+
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center p-3 bg-zinc-900/50 rounded border border-zinc-900">
+                        <div>
+                            <span class="text-white text-xs font-bold tracking-wider block">INVERTER EIXO VERTICAL (Y)</span>
+                            <span class="text-zinc-500 text-[9px]">Padrão para visualização de celular invertida</span>
+                        </div>
+                        <input type="checkbox" id="invert-y-check" checked class="w-4 h-4 accent-red-600">
+                    </div>
+
+                    <div class="flex justify-between items-center p-3 bg-zinc-900/50 rounded border border-zinc-900">
+                        <div>
+                            <span class="text-white text-xs font-bold tracking-wider block">INVERTER EIXO HORIZONTAL (X)</span>
+                            <span class="text-zinc-500 text-[9px]">Facilita movimentos rápidos arrastando a tela</span>
+                        </div>
+                        <input type="checkbox" id="invert-x-check" checked class="w-4 h-4 accent-red-600">
+                    </div>
+
+                    <div class="p-3 bg-zinc-900/50 rounded border border-zinc-900">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-white text-xs font-bold tracking-wider">SENSIBILIDADE DE RESPOSTA</span>
+                            <span id="sens-val-text" class="text-red-500 text-xs font-bold">1.2x</span>
+                        </div>
+                        <input type="range" id="sensitivity-slider" min="0.2" max="3.0" step="0.1" value="1.2" class="w-full accent-red-600">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Painel de Diretrizes (Manual de Sobrevivência) -->
+        <div id="guidelines-overlay" class="absolute inset-0 bg-black/95 z-40 flex items-center justify-center p-6 hidden">
+            <div class="w-full max-w-lg bg-zinc-950 border border-zinc-900 rounded p-6 space-y-4">
+                <div class="flex justify-between items-center border-b border-zinc-900 pb-3">
+                    <h3 class="text-red-600 text-xs font-bold tracking-widest uppercase">DIRETRIZES DE CAMPO</h3>
+                    <button id="close-guidelines-btn" class="text-zinc-500 hover:text-white text-xs uppercase">[Fechar]</button>
+                </div>
+                <div class="space-y-3 text-xs text-zinc-400 leading-relaxed text-left">
+                    <p><span class="text-white font-bold block">1. MONITORAMENTO REATIVO</span> O Observador permanece paralisado quando você direciona sua mira para ele. Ele se move de forma extremamente agressiva quando você desvia o olhar.</p>
+                    <p><span class="text-white font-bold block">2. PROPAGAÇÃO SÔNICA</span> Correr produz ruído que o atrai diretamente. Utilize a tecla [C] ou toque no botão para agachar e silenciar seus passos completamente.</p>
+                    <p><span class="text-white font-bold block">3. DISTRAÇÕES</span> Colete garrafas no chão. Arremesse-as clicando ou tocando no botão para criar barulho e enganar a IA de rastreio.</p>
+                    <p><span class="text-white font-bold block">4. ARMÁRIOS METÁLICOS</span> Se for avistado, corra para um armário e pressione [E] ou o botão de ação rápida para prender a respiração.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HUD PRINCIPAL DE JOGO -->
+    <div id="hud" class="absolute inset-0 z-20 pointer-events-none flex flex-col justify-between p-6 text-zinc-400 opacity-0 transition-opacity duration-1000 select-none">
         
-        <div class="dashboard-grid reveal">
-            <div class="chart-card" style="padding: 10px; border-color: rgba(255,0,0,0.5);">
-                <div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border: 1px solid var(--accent);">
-                    <iframe 
-                        style="position: absolute; top: 0; left: 0; width: 100%; height: 100%;" 
-                        src="https://www.youtube.com/embed/mg92G5wBWus" 
-                        title="Diga não à violência doméstica" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen>
-                    </iframe>
+        <!-- Painel Superior do HUD -->
+        <div class="flex justify-between items-start text-xs">
+            <div class="flex flex-col gap-1">
+                <div class="flex items-center gap-2 text-red-600 font-bold tracking-[0.2em]">
+                    <!-- Ícone de REC (SVG) -->
+                    <svg class="w-3 h-3 text-red-600 animate-ping" fill="currentColor" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10"/>
+                    </svg>
+                    <span>REC FEED_04</span>
                 </div>
+                <span class="text-zinc-600 text-[9px] tracking-wider">MODO NOTURNO ATIVO</span>
             </div>
-
-            <div class="interactive-card" style="display: flex; flex-direction: column; justify-content: center;">
-                <h3 style="color: var(--accent); font-family: 'Syncopate'; font-size: 0.9rem;">"HOJE EU RECEBI FLORES"</h3>
-                <p style="margin-bottom: 20px; font-style: italic; color: #ccc; font-size: 0.95rem;">
-                    O vídeo narra a progressão silenciosa da violência: o que começa com "flores de desculpa" termina em um funeral. Uma mensagem brutal sobre como o ciclo da agressão não para por conta própria.
-                </p>
-                
-                <h3 style="color: var(--text-main); font-family: 'Syncopate'; font-size: 0.7rem; margin-top: 10px;">NOSSO COMPROMISSO</h3>
-                <p style="font-size: 0.9rem; line-height: 1.8;">
-                    Somos a equipe da <strong>Sala 2 Reg 6</strong> e este projeto escolar nasce da necessidade urgente de conscientização. Nosso objetivo é mostrar que a violência doméstica não é um problema privado, mas um alerta público. <strong>É preciso identificar os sinais e denunciar agora. Não espere que seja tarde demais.</strong>
-                </p>
-            </div>
-        </div>
-    </div>
-</section>
-
-        <section>
-            <span class="section-label reveal">Teste de Consciência</span>
-            <div class="quiz-box reveal">
-    <div id="quiz-start" style="text-align: center;">
-        <h2 style="font-size: 1.5rem; margin-bottom: 20px; font-family: 'Syncopate';">MODO DINÂMICA</h2>
-        <p style="color: var(--text-dim); margin-bottom: 30px;">PAINEL DO MEDIADOR • CONTROLE MANUAL</p>
-        <button class="btn-main" onclick="startQuiz()">Abrir Sistema</button>
-    </div>
-
-    <div id="scoreboard" style="display:none; flex-direction: column; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 20px;">
-        <div style="display: flex; justify-content: space-around; width: 100%;">
-            <div style="text-align: center;">
-                <span style="color: #fff; font-size: 0.7rem; font-family: 'Syncopate';">TIME A</span>
-                <div id="score-a" style="font-size: 2.5rem; color: var(--accent); font-weight: 900;">0</div>
-                <div style="display: flex; gap: 5px; justify-content: center;">
-                    <button onclick="addPoints('A', 1)" style="background: #222; color: #fff; border: 1px solid #444; padding: 2px 8px;">+1</button>
-                    <button onclick="addPoints('A', -1)" style="background: #222; color: #fff; border: 1px solid #444; padding: 2px 8px;">-1</button>
-                </div>
-            </div>
-            <div style="text-align: center;">
-                <span style="color: #fff; font-size: 0.7rem; font-family: 'Syncopate';">TIME B</span>
-                <div id="score-b" style="font-size: 2.5rem; color: #fff; font-weight: 900;">0</div>
-                <div style="display: flex; gap: 5px; justify-content: center;">
-                    <button onclick="addPoints('B', 1)" style="background: #222; color: #fff; border: 1px solid #444; padding: 2px 8px;">+1</button>
-                    <button onclick="addPoints('B', -1)" style="background: #222; color: #fff; border: 1px solid #444; padding: 2px 8px;">-1</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="quiz-active" style="display:none">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <span id="q-count" style="color: var(--accent); font-weight: 700;">PERGUNTA 01/10</span>
-            <select id="current-team" style="background: #000; color: #fff; border: 1px solid var(--accent); padding: 5px; font-size: 0.8rem;">
-                <option value="A">TURNO: TIME A</option>
-                <option value="B">TURNO: TIME B</option>
-            </select>
-        </div>
-
-        <div style="margin-bottom: 20px; display: flex; gap: 20px; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 4px;">
-            <label style="font-size: 0.8rem;"><input type="checkbox" id="is-repeated"> Já respondeu (+1)</label>
-            <label style="font-size: 0.8rem; color: #ff4444;" onclick="passTurn()" style="cursor:pointer;">[PASSAR VEZ -2]</label>
-        </div>
-
-        <p id="q-text" style="font-size: 1.1rem; margin-bottom: 20px; font-weight: 700; color: #fff;"></p>
-        <div id="opt-grid"></div>
-        
-        <div style="margin-top: 30px; display: flex; gap: 10px;">
-            <button class="btn-main" style="flex: 1; font-size: 0.6rem; border-color: #444;" onclick="cur--; loadQ();">Voltar Pergunta</button>
-            <button class="btn-main" style="flex: 2; font-size: 0.6rem; background: #fff; color: #000;" onclick="cur++; loadQ();">Próxima Pergunta →</button>
-        </div>
-    </div>
-
-    <div id="quiz-end" style="display:none; text-align: center;">
-        <h2 id="winner-text" style="font-family: 'Syncopate'; font-size: 1.5rem; margin-bottom: 10px;">FIM DA DINÂMICA</h2>
-        <button class="btn-main" onclick="location.reload()">Resetar Sistema</button>
-    </div>
-</div>
-
-        </section>
-<div style="text-align: center; margin-top: 50px;">
-    <button onclick="abrirCreditos()" class="btn-main reveal">
-        <i class="fa-solid fa-film" style="margin-right: 10px;"></i> Ver Créditos
-    </button>
-</div>
-
-<div id="creditos">
-    <button class="fechar-creditos" onclick="fecharCreditos()">&times; FECHAR</button>
-    
-    <div class="creditos-conteudo" id="creditos-scroll">
-    <span style="color: var(--accent); font-family: 'Syncopate'; letter-spacing: 10px;">PROJETO IMPACTO 2026</span>
-    <h1>CRÉDITOS E FONTES</h1>
-
-    <div class="creditos-secao">
-        <h2><i class="fa-solid fa-code"></i> ARQUITETURA E DESENVOLVIMENTO</h2>
-        <p><strong>Kaio Cesar</strong> — Lead Developer & UI Designer</p>
-    </div>
-
-    <div class="creditos-secao">
-        <h2><i class="fa-solid fa-magnifying-glass-chart"></i> ANÁLISE DE DADOS E PESQUISA</h2>
-        <p>Gabriel Moreira</p>
-        <p>Raynan Lucas</p>
-        <p>Hiago Victor</p>
-        <p>Gabriel Egídio</p>
-        <p>Kaio Cesar</p>
-    </div>
-
-    <div class="creditos-secao">
-        <h2><i class="fa-solid fa-chalkboard-user"></i> CORPO DE APRESENTAÇÃO</h2>
-        <p>Guilherme Moreira</p>
-        <p>Charlotte</p>
-        <p>Hiago Victor</p>
-        <p>Júlia</p>
-        <p>Raynan Lucas</p>
-        <p>Gabriel Egídio</p>
-        <p>Kaio Cesar</p>
-    </div>
-
-    <div class="creditos-secao">
-        <h2><i class="fa-solid fa-server"></i> FONTES DE DADOS ESTATÍSTICOS</h2>
-        <p>Fórum Brasileiro de Segurança Pública (FBSP)</p>
-        <p>Monitor da Violência (G1/NEV-USP)</p>
-        <p>Instituto Patrícia Galvão — Dados sobre Violência</p>
-        <p>Ministério das Mulheres — Painel Ligue 180</p>
-        <p>Anuário Brasileiro de Segurança Pública 2024/2025</p>
-    </div>
-
-    <div class="creditos-secao">
-        <h2><i class="fa-solid fa-terminal"></i> STACK TECNOLÓGICA</h2>
-        <p>Gemini 3.0 Flash — Engine Cognitiva</p>
-        <p>Chart.js — Renderização de Dados</p>
-        <p>ScrollReveal — Dinâmica de Interface</p>
-        <p>Font Awesome — Iconografia</p>
-    </div>
-
-    <div class="creditos-final">
-        <p>© 2026 — SISTEMA DE CONSCIENTIZAÇÃO SOCIAL</p>
-        <div style="width: 50px; height: 2px; background: var(--accent); margin: 20px auto;"></div>
-        <p style="font-size: 0.7rem; opacity: 0.5;">PRODUÇÃO ACADÊMICA • v4.0.26</p>
-    </div>
-</div>
-
-
-        <footer>
             
-            <div style="text-align: right;">
-                <p>© 2026 PROJETO - VIOLENCIA FISICA - 2 REG 6</p>
-                <p style="color: white; font-weight: 700;">DADOS EM TEMPO REAL</p>
+            <!-- Barra de Ruído (Passos) -->
+            <div class="flex flex-col items-center gap-1.5">
+                <div class="flex items-center gap-1.5">
+                    <!-- Ícone de Áudio/Ruído (SVG) -->
+                    <svg class="w-3.5 h-3.5 text-zinc-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19.114 5.636a9 9 0 010 12.728M16.463 8.288a5.25 5.25 0 010 7.424M6.75 8.25l4.72-4.72a.75.75 0 011.28.53v15.88a.75.75 0 01-1.28.53l-4.72-4.72H4.51c-.88 0-1.704-.507-1.938-1.354A9.01 9.01 0 012.25 12c0-.83.112-1.633.322-2.396C2.806 8.756 3.63 8.25 4.51 8.25H6.75z"/>
+                    </svg>
+                    <span class="text-[9px] tracking-widest text-zinc-500 uppercase">Ruído de Passos</span>
+                </div>
+                <div class="w-36 h-2 border border-zinc-800 bg-zinc-950 p-0.5 flex rounded-sm">
+                    <div id="noise-meter-bar" class="h-full bg-green-500 w-0 transition-all duration-300"></div>
+                </div>
             </div>
-        </footer>
+
+            <!-- Bateria Lanterna -->
+            <div class="flex flex-col items-end gap-1">
+                <div class="flex items-center gap-2">
+                    <!-- Ícone de Bateria (SVG) -->
+                    <svg class="w-4 h-4 text-zinc-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/>
+                    </svg>
+                    <span id="battery-pct" class="font-bold text-[10px]">100%</span>
+                    <div class="w-8 h-3.5 border border-zinc-700 p-0.5 flex rounded-sm">
+                        <div id="battery-bar" class="h-full bg-zinc-400 w-full transition-all duration-300"></div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1 text-zinc-500 text-[10px]" id="inventory-bottles">
+                    <!-- Ícone de Garrafa (SVG) -->
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 9.75l4.5 4.5m0-4.5l-4.5 4.5M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span>GARRAFAS: 0/3</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prompts Cinemáticos Narrativos -->
+        <div class="absolute top-1/3 left-1/2 -translate-x-1/2 text-center w-full px-4">
+            <div id="game-prompt" class="text-white text-xs font-normal tracking-[0.15em] uppercase bg-black/85 border border-zinc-900 px-6 py-3 inline-block rounded shadow-2xl opacity-0 transition-all duration-700">
+                O silêncio do bunker é o seu único escudo...
+            </div>
+        </div>
+
+        <!-- Retículo Central de Interação -->
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none flex flex-col items-center justify-center">
+            <div class="w-1.5 h-1.5 bg-white/40 rounded-full"></div>
+            <span id="interact-tip" class="text-white text-[9px] tracking-widest uppercase mt-3 bg-black/90 px-3 py-1 rounded border border-zinc-800 opacity-0 transition-all duration-300">
+                Ação Disponível
+            </span>
+        </div>
+
+        <!-- Painel Inferior do HUD -->
+        <div class="flex justify-between items-end text-[10px] tracking-wider text-zinc-500">
+            <div>
+                <p>SHUTTER 1/48s | ISO 3200</p>
+                <p id="player-pose-text" class="text-green-500 font-bold uppercase mt-1">EM PÉ</p>
+            </div>
+            <div class="text-right">
+                <div class="flex items-center gap-1.5 justify-end">
+                    <!-- Ícone de Chave/Relíquia (SVG) -->
+                    <svg class="w-4 h-4 text-red-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H3.75v-2.25A3.375 3.375 0 013 18v-2.25c0-.895.356-1.754.988-2.386l.548-.547A3.374 3.374 0 005.25 10.5V8.25a9 9 0 1118 0z"/>
+                    </svg>
+                    <p id="keys-counter" class="text-red-500 font-bold text-xs tracking-widest uppercase">CHAVES: 0 / 3</p>
+                </div>
+                <p class="text-zinc-600 mt-1 pl-1 text-[9px]">SISTEMA DE EXAUSTÃO SELADO</p>
+            </div>
+        </div>
     </div>
+
+    <!-- TELA DE VITÓRIA E DERROTA -->
+    <div id="end-screen" class="absolute inset-0 z-40 flex flex-col items-center justify-center bg-black text-center p-6 hidden">
+        <h2 id="end-title" class="text-4xl md:text-7xl font-black tracking-[0.25em] uppercase mb-4 text-red-700 animate-pulse">
+            PEGO PELA SOMBRA
+        </h2>
+        <p id="end-subtitle" class="text-zinc-500 text-xs md:text-sm tracking-wider max-w-xl mb-8 leading-relaxed">
+            Seus gritos se misturaram com a estática do bunker abandonado.
+        </p>
+        <button id="restart-btn" class="px-8 py-3.5 border border-zinc-800 hover:border-red-600 text-zinc-400 hover:text-red-500 font-bold tracking-widest rounded transition-all duration-300 uppercase text-xs">
+            Refazer Turno de Guarda
+        </button>
+    </div>
+
+    <!-- BOTOES INTERATIVOS TOUCH PARA APARELHOS MOBILE -->
+    <div class="absolute bottom-6 right-6 z-30 flex gap-4 pointer-events-none select-none">
+        <!-- Botão de Agachar (SVG) -->
+        <button id="crouch-btn" class="pointer-events-auto px-5 py-4 bg-zinc-950/90 border border-zinc-900 text-white font-bold text-[10px] tracking-wider rounded-full uppercase hidden touch-none flex items-center gap-1.5 shadow-2xl">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5"/>
+            </svg>
+            AGACHADO
+        </button>
+        <!-- Botão de Garrafa (SVG) -->
+        <button id="throw-btn" class="pointer-events-auto px-5 py-4 bg-zinc-950/90 border border-zinc-900 text-white font-bold text-[10px] tracking-wider rounded-full uppercase hidden touch-none flex items-center gap-1.5 shadow-2xl">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/>
+            </svg>
+            DISTRAIR
+        </button>
+        <!-- Botão de Interação Geral [E] (SVG) -->
+        <button id="action-btn" class="pointer-events-auto px-5 py-4 bg-zinc-950/90 border border-zinc-900 text-white font-bold text-[10px] tracking-wider rounded-full uppercase hidden touch-none flex items-center gap-1.5 shadow-2xl">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 9h16.5m-16.5 6.75h16.5"/>
+            </svg>
+            AÇÃO
+        </button>
+    </div>
+
+    <!-- Joystick Esquerdo Virtual -->
+    <div id="joystick" class="joystick-zone">
+        <div id="joystick-handle" class="joystick-button"></div>
+    </div>
+
+    <!-- Canvas Container -->
+    <div id="canvas-container" class="w-full h-full"></div>
 
     <script>
-/* ============================================================
-   1. SISTEMA DE DINÂMICA (QUIZ) - REGRAS: +2, +1, -1, -2
-   ============================================================ */
+        // --- CALIBRAÇÃO DOS EIXOS E SENSIBILIDADE ---
+        const ControlConfig = {
+            invertY: true,     // Calibrado por padrão para inverter eixos
+            invertX: true,
+            sensitivity: 1.2
+        };
 
-const questions = [
-    { q: "Qual o intervalo de um feminicídio no mundo em 2026?", a: ["1 hora", "2 minutos", "10 minutos"], c: 1 },
-    { q: "Onde ocorre 68% das agressões físicas contra mulheres?", a: ["Residência", "Rua", "Trabalho"], c: 0 },
-    { q: "Qual o número principal para denúncias no Brasil?", a: ["190", "153", "180"], c: 2 },
-    { q: "A violência psicológica também é considerada crime?", a: ["Não", "Sim", "Só se houver agressão física"], c: 1 },
-    { q: "A cada quanto tempo uma mulher é agredida no Brasil?", a: ["2 segundos", "2 minutos", "2 horas"], c: 0 },
-    { q: "Quem são os principais autores de feminicídios?", a: ["Desconhecidos", "Parceiros ou ex-parceiros", "Ladrões"], c: 1 },
-    { q: "O feminicídio é um crime de qual tipo?", a: ["Comum", "Hediondo", "Culposo"], c: 1 },
-    { q: "Qual a fase do ciclo da violência que precede a agressão?", a: ["Lua de mel", "Aumento da tensão", "Arrependimento"], c: 1 },
-    { q: "A Medida Protetiva serve para:", a: ["Multar o agressor", "Afastar o agressor da vítima", "Prender a vítima"], c: 1 },
-    { q: "Qual o maior fator de subnotificação?", a: ["Falta de leis", "Medo e dependência", "Falta de internet"], c: 1 }
-];
+        // --- GERENCIAMENTO DE ESTADO ---
+        const GameState = {
+            isMenuMode: true,        // NOVO: Indica se está renderizando a cena do menu principal
+            isPlaying: false,
+            keysCollected: 0,
+            totalKeys: 3,
+            battery: 100,
+            flashlightOn: true,
+            isMobile: false,
+            isCrouching: false,
+            currentNoise: 0,
+            isScreamerActive: false,
+            escaped: false,
+            isHiding: false,
+            activeLocker: null,
+            bottlesCount: 0,
+            isThrowing: false
+        };
 
-let cur = 0;
-let scoreA = 0;
-let scoreB = 0;
+        // --- SISTEMAS DE THREE.JS ---
+        let scene, camera, renderer, clock;
+        let flashlight, ambientLight, menuFlickerLight;
+        let mapGrid = [];
+        let wallMeshes = [];
 
-function startQuiz() {
-    document.getElementById('quiz-start').style.display = 'none';
-    document.getElementById('scoreboard').style.display = 'flex';
-    document.getElementById('quiz-active').style.display = 'block';
-    loadQ();
-}
+        let keys = [];
+        let lockers = [];
+        let puddles = [];
+        let items = [];
+        let activeThrownBottle = null;
+        let escapeDuct = null;
+        let escapeLight = null;
 
-function loadQ() {
-    if(cur < 0) cur = 0;
-    if(cur >= questions.length) {
-        endQuiz();
-        return;
-    }
-    
-    // Reset de estado da pergunta
-    document.getElementById('is-repeated').checked = false;
-    const q = questions[cur];
-    document.getElementById('q-count').innerText = `PERGUNTA ${cur+1}/${questions.length}`;
-    document.getElementById('q-text').innerText = q.q;
-    
-    const grid = document.getElementById('opt-grid');
-    grid.innerHTML = '';
-    
-    q.a.forEach((opt, i) => {
-        const b = document.createElement('button');
-        b.className = 'opt-btn';
-        b.innerText = opt;
-        // O clique apenas sinaliza, quem muda a pergunta é o mediador nos botões inferiores
-        b.onclick = (e) => handleMediatorClick(i, e.target);
-        grid.appendChild(b);
-    });
-}
+        // Observador
+        let stalker;
+        let stalkerState = "STALKING";
+        let lastStalkerTeleportTime = 0;
+        let targetInvestigationPoint = null;
 
-function handleMediatorClick(idx, element) {
-    const correctIdx = questions[cur].c;
-    const currentTeam = document.getElementById('current-team').value;
-    const isRepeated = document.getElementById('is-repeated').checked;
+        // Configuração física do Mapa (14x14)
+        const mapSize = 14;
+        const cellSize = 10;
+        const mapLayout = [
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+            [1,2,0,8,1,0,0,4,0,0,3,0,7,1],
+            [1,1,1,0,1,0,1,1,1,1,0,1,1,1],
+            [1,0,0,0,0,0,0,0,0,1,0,0,0,1],
+            [1,0,1,1,1,1,0,1,0,1,1,1,0,1],
+            [1,7,1,3,0,0,0,1,0,0,8,1,0,1],
+            [1,0,1,1,1,0,1,1,1,1,0,1,0,1],
+            [1,0,8,0,1,0,0,7,0,1,0,0,4,1],
+            [1,1,1,0,1,1,1,1,0,1,1,1,0,1],
+            [1,3,0,0,0,4,0,1,0,0,0,1,5,1],
+            [1,1,1,1,1,1,0,1,1,1,0,1,1,1],
+            [1,7,0,0,8,0,0,0,0,0,0,0,0,1],
+            [1,1,1,1,1,1,6,1,1,1,1,1,1,1],
+            [1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ];
 
-    // Lógica de Pontuação Solicitada
-    if(idx === correctIdx) {
-        element.classList.add('correct');
-        let points = isRepeated ? 1 : 2; // Pessoa nova +2, Repetida +1
-        addPoints(currentTeam, points);
-    } else {
-        element.classList.add('wrong');
-        document.querySelectorAll('.opt-btn')[correctIdx].classList.add('correct');
-        addPoints(currentTeam, -1); // Errou -1
-    }
-    
-    // Trava os botões para evitar múltiplos cliques na mesma pergunta
-    document.querySelectorAll('.opt-btn').forEach(btn => btn.style.pointerEvents = 'none');
-}
+        // Controles e Vetores
+        const moveDirection = { forward: 0, backward: 0, left: 0, right: 0 };
+        let playerVelocity = new THREE.Vector3();
+        let playerRotation = { yaw: 0, pitch: 0 };
+        const basePlayerSpeed = 15.0;
+        const playerRadius = 1.1;
 
-function addPoints(team, pts) {
-    if(team === 'A') {
-        scoreA += pts;
-        document.getElementById('score-a').innerText = scoreA;
-    } else {
-        scoreB += pts;
-        document.getElementById('score-b').innerText = scoreB;
-    }
-}
+        // --- SISTEMA DE SÍNTESE DE ÁUDIO REALISTA (Web Audio API) ---
+        class WebAudioSystem {
+            constructor() {
+                this.ctx = null;
+            }
 
-function passTurn() {
-    const currentTeam = document.getElementById('current-team').value;
-    addPoints(currentTeam, -2); // Passou pro outro time -2
-    // Troca o seletor de time automaticamente
-    document.getElementById('current-team').value = (currentTeam === 'A' ? 'B' : 'A');
-}
+            init() {
+                if (this.ctx) return;
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                this.ctx = new AudioCtx();
+                this.createAmbientAtmosphere();
+                this.startHeartbeatLoop();
+            }
 
-function endQuiz() {
-    document.getElementById('quiz-active').style.display = 'none';
-    document.getElementById('quiz-end').style.display = 'block';
-    
-    let vencedor = "";
-    if(scoreA > scoreB) vencedor = "VITÓRIA DO TIME A";
-    else if(scoreB > scoreA) vencedor = "VITÓRIA DO TIME B";
-    else vencedor = "EMPATE TÉCNICO";
-    
-    document.getElementById('winner-text').innerText = vencedor;
-}
+            createAmbientAtmosphere() {
+                try {
+                    // Trilha de drone industrial FNAF: Osciladores combinados para emitir frequência opressora
+                    const osc = this.ctx.createOscillator();
+                    const filter = this.ctx.createBiquadFilter();
+                    const gain = this.ctx.createGain();
 
-/* ============================================================
-   2. FEMINICIDIÔMETRO E CONTADORES ANIMADOS
-   ============================================================ */
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(32, this.ctx.currentTime);
 
-const START_2026 = new Date("2026-01-01T00:00:00").getTime();
-const MS_PER_CASE = 120000; 
+                    filter.type = 'lowpass';
+                    filter.frequency.setValueAtTime(100, this.ctx.currentTime);
 
-function updateCounter() {
-    const now = new Date().getTime();
-    const elapsed = now - START_2026;
-    const cases = Math.floor(elapsed / MS_PER_CASE);
-    if(document.getElementById('fem-counter')) {
-        document.getElementById('fem-counter').innerText = cases.toLocaleString();
-    }
+                    gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
 
-    let remaining = MS_PER_CASE - (elapsed % MS_PER_CASE);
-    let m = Math.floor(remaining / 60000);
-    let s = Math.floor((remaining % 60000) / 1000);
-    if(document.getElementById('timer-label')) {
-        document.getElementById('timer-label').innerText = `PRÓXIMO REGISTRO EM: ${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
-    }
-}
-setInterval(updateCounter, 1000);
-updateCounter();
+                    osc.connect(filter);
+                    filter.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
 
-// Números que sobem ao rolar a tela (Seção Impacto)
-const counters = document.querySelectorAll(".count");
-const counterObs = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-        if(entry.isIntersecting){
-            const el = entry.target;
-            let start = 0;
-            const end = +el.dataset.target;
-            const update = () => {
-                start += Math.ceil(end/60);
-                if(start >= end) start = end;
-                el.innerText = start;
-                if(start < end) requestAnimationFrame(update);
-            };
-            update();
-            counterObs.unobserve(el);
+                    // Adiciona picos de oscilação para ranger de canos de ventilação
+                    setInterval(() => {
+                        if (this.ctx && GameState.isPlaying) {
+                            const mod = 80 + Math.sin(Date.now() * 0.0012) * 25;
+                            filter.frequency.setValueAtTime(mod, this.ctx.currentTime);
+                        }
+                    }, 50);
+                } catch(e) {}
+            }
+
+            startHeartbeatLoop() {
+                const triggerBeat = () => {
+                    if (GameState.isMenuMode || GameState.escaped) return;
+
+                    let rate = 1300; // ms
+                    if (stalker) {
+                        const dist = camera.position.distanceTo(stalker.position);
+                        if (dist < 45) {
+                            const minRate = GameState.isHiding ? 170 : 230;
+                            rate = THREE.MathUtils.mapLinear(dist, 4, 45, minRate, 1300);
+                        }
+                    }
+
+                    try {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+
+                        osc.type = 'sine';
+                        osc.frequency.setValueAtTime(48, this.ctx.currentTime);
+                        osc.frequency.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+
+                        const beatVol = GameState.isHiding ? 0.65 : 0.45;
+                        gain.gain.setValueAtTime(beatVol, this.ctx.currentTime);
+                        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.22);
+
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+
+                        osc.start();
+                        osc.stop(this.ctx.currentTime + 0.25);
+                    } catch(e){}
+
+                    setTimeout(triggerBeat, rate);
+                };
+                triggerBeat();
+            }
+
+            playSfx(frequency, duration, type = 'sine', maxVolume = 0.3) {
+                if (!this.ctx) return;
+                try {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc.type = type;
+                    osc.frequency.setValueAtTime(frequency, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(maxVolume, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + duration);
+
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + duration);
+                } catch(e){}
+            }
+
+            playGlassBreak() {
+                if (!this.ctx) return;
+                try {
+                    const now = this.ctx.currentTime;
+                    const tones = [750, 1300, 2100, 2900];
+                    tones.forEach(t => {
+                        const osc = this.ctx.createOscillator();
+                        const gain = this.ctx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(t, now);
+                        osc.frequency.exponentialRampToValueAtTime(t * 0.1, now + 0.28);
+                        gain.gain.setValueAtTime(0.18, now);
+                        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.28);
+                        osc.connect(gain);
+                        gain.connect(this.ctx.destination);
+                        osc.start();
+                        osc.stop(now + 0.28);
+                    });
+                } catch(e){}
+            }
+
+            playJumpscare() {
+                if (!this.ctx) return;
+                try {
+                    const duration = 2.5;
+                    const now = this.ctx.currentTime;
+                    
+                    const osc1 = this.ctx.createOscillator();
+                    const osc2 = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+
+                    osc1.type = 'sawtooth';
+                    osc1.frequency.setValueAtTime(1500, now);
+                    osc1.frequency.linearRampToValueAtTime(55, now + duration);
+
+                    osc2.type = 'square';
+                    osc2.frequency.setValueAtTime(80, now);
+                    osc2.frequency.linearRampToValueAtTime(12, now + duration);
+
+                    gain.gain.setValueAtTime(0.95, now);
+                    gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+                    osc1.connect(gain);
+                    osc2.connect(gain);
+                    gain.connect(this.ctx.destination);
+
+                    osc1.start();
+                    osc2.start();
+                    osc1.stop(now + duration);
+                    osc2.stop(now + duration);
+                } catch(e){}
+            }
         }
-    });
-}, {threshold: .7});
-counters.forEach(c => counterObs.observe(c));
 
-/* ============================================================
-   3. GRÁFICOS (CHART.JS)
-   ============================================================ */
+        const audioSys = new WebAudioSystem();
 
-const pizzaCtx = document.getElementById('pizzaChart').getContext('2d');
-new Chart(pizzaCtx, {
-    type: 'pie',
-    data: {
-        labels: ['Violência Física', 'Violência Psicológica', 'Violência Moral', 'Violência Patrimonial', 'Violência Sexual'],
-        datasets: [{
-            data: [50, 25, 15, 5, 5],
-            backgroundColor: ['#ff0000', '#cc0000', '#990000', '#660000', '#330000'],
-            borderWidth: 2,
-            borderColor: '#000',
-            hoverOffset: 30
-        }]
-    },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom', labels: { color: '#888', font: { size: 11 } } } }
-    }
-});
+        // --- SISTEMAS DE TEXTURA PROCEDURAL ---
+        function generateBrickTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 512; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#0f0f11';
+            ctx.fillRect(0, 0, 512, 512);
 
-const barCtx = document.getElementById('barChart').getContext('2d');
-const barDataSets = [
-    { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai'], data: [1.2, 1.4, 1.9, 1.6, 2.1] },
-    { labels: ['Casa', 'Rua', 'Trabalho', 'Outros'], data: [68, 18, 8, 6] }
-];
+            for(let i=0; i<35000; i++) {
+                const v = Math.random() * 12 - 6;
+                ctx.fillStyle = `rgb(${12+v},${12+v},${14+v})`;
+                ctx.fillRect(Math.random()*512, Math.random()*512, 1.5, 1.5);
+            }
 
-let barChart = new Chart(barCtx, {
-    type: 'bar',
-    data: {
-        labels: barDataSets[0].labels,
-        datasets: [{ data: barDataSets[0].data, backgroundColor: '#ff0000' }]
-    },
-    options: {
-        responsive: true, maintainAspectRatio: false,
-        scales: { 
-            y: { grid: { color: '#1a1a1a' }, ticks: { color: '#666' } },
-            x: { ticks: { color: '#fff' }, grid: { display: false } }
-        },
-        plugins: { legend: { display: false } }
-    }
-});
+            ctx.strokeStyle = '#010101';
+            ctx.lineWidth = 3;
+            const rows = 14; const cols = 7;
+            const rh = 512 / rows; const cw = 512 / cols;
 
-function updateBar(idx, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    barChart.data.labels = barDataSets[idx].labels;
-    barChart.data.datasets[0].data = barDataSets[idx].data;
-    barChart.update();
-}
+            for(let r=0; r<rows; r++) {
+                ctx.beginPath();
+                ctx.moveTo(0, r*rh); ctx.lineTo(512, r*rh);
+                ctx.stroke();
 
-/* ============================================================
-   4. INTERATIVIDADE VISUAL (GLOW, 3D, MAGNETIC)
-   ============================================================ */
+                const offset = (r % 2) * (cw / 2);
+                for(let c=0; c<=cols+1; c++) {
+                    ctx.beginPath();
+                    ctx.moveTo(c*cw - offset, r*rh);
+                    ctx.lineTo(c*cw - offset, (r+1)*rh);
+                    ctx.stroke();
+                }
+            }
+            return new THREE.CanvasTexture(canvas);
+        }
 
-// Glow que segue o mouse
-document.addEventListener("mousemove", e => {
-    document.documentElement.style.setProperty('--x', e.clientX + 'px');
-    document.documentElement.style.setProperty('--y', e.clientY + 'px');
-});
+        function generateFloorTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#040405';
+            ctx.fillRect(0, 0, 256, 256);
 
-// Parallax de Fundo
-window.addEventListener("scroll", () => {
-    document.body.style.backgroundPosition = `center ${window.scrollY * 0.15}px`;
-});
+            for(let i=0; i<12000; i++) {
+                const v = Math.random() * 8;
+                ctx.fillStyle = `rgb(${6+v},${6+v},${8+v})`;
+                ctx.fillRect(Math.random()*256, Math.random()*256, 2, 2);
+            }
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(0, 0, 256, 256);
+            return new THREE.CanvasTexture(canvas);
+        }
 
-// Efeito Magnético em Botões
-document.querySelectorAll(".btn-main").forEach(btn => {
-    btn.addEventListener("mousemove", e => {
-        const rect = btn.getBoundingClientRect();
-        const x = e.clientX - rect.left - rect.width / 2;
-        const y = e.clientY - rect.top - rect.height / 2;
-        btn.style.transform = `translate(${x * 0.15}px, ${y * 0.15}px)`;
-    });
-    btn.addEventListener("mouseleave", () => {
-        btn.style.transform = "translate(0,0)";
-    });
-});
+        function generateMetalLockerTexture() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#18181b';
+            ctx.fillRect(0, 0, 256, 512);
 
-// Efeito 3D nos Cards
-document.querySelectorAll(".interactive-card").forEach(card => {
-    card.addEventListener("mousemove", e => {
-        const rect = card.getBoundingClientRect();
-        const x = (e.clientX - rect.left) / rect.width - 0.5;
-        const y = (e.clientY - rect.top) / rect.height - 0.5;
-        card.style.transform = `rotateY(${x * 8}deg) rotateX(${-y * 8}deg) translateY(-10px)`;
-    });
-    card.addEventListener("mouseleave", () => {
-        card.style.transform = "rotateY(0) rotateX(0) translateY(0)";
-    });
-});
+            for(let i=0; i<12000; i++) {
+                const noise = Math.random() * 12;
+                ctx.fillStyle = `rgb(${20+noise},${20+noise},${22+noise})`;
+                ctx.fillRect(Math.random()*256, Math.random()*512, 1.5, 1.5);
+            }
 
-/* ============================================================
-   5. CRÉDITOS E ANIMAÇÕES DE SCROLL
-   ============================================================ */
+            ctx.fillStyle = 'rgba(90, 45, 15, 0.25)';
+            for(let i=0; i<10; i++) {
+                ctx.beginPath();
+                ctx.arc(Math.random()*256, Math.random()*512, Math.random()*35 + 8, 0, Math.PI*2);
+                ctx.fill();
+            }
 
-function abrirCreditos() {
-    const painel = document.getElementById("creditos");
-    const conteudo = document.getElementById("creditos-scroll");
-    painel.style.display = "block";
-    conteudo.classList.add("animar-subida");
-}
+            ctx.fillStyle = '#030303';
+            for (let i = 0; i < 4; i++) {
+                ctx.fillRect(50, 40 + i * 20, 156, 5);
+                ctx.fillRect(50, 410 + i * 20, 156, 5);
+            }
 
-function fecharCreditos() {
-    const painel = document.getElementById("creditos");
-    const conteudo = document.getElementById("creditos-scroll");
-    painel.style.display = "none";
-    conteudo.classList.remove("animar-subida");
-}
+            ctx.strokeStyle = '#08080a';
+            ctx.lineWidth = 5;
+            ctx.strokeRect(0,0,256,512);
 
-ScrollReveal().reveal('.reveal', { distance: '40px', duration: 800, interval: 80, origin: 'bottom' });
+            return new THREE.CanvasTexture(canvas);
+        }
 
+        // --- CONSTRUTOR DO MODELO DO OBSERVADOR (STALKER) ---
+        function buildObserverModel() {
+            const group = new THREE.Group();
+
+            const bodyMat = new THREE.MeshStandardMaterial({ 
+                color: 0x020202, 
+                roughness: 1.0, 
+                metalness: 0.0 
+            });
+
+            const headMat = new THREE.MeshStandardMaterial({
+                color: 0xdcdcdc,
+                roughness: 0.85
+            });
+
+            // Torso esticado
+            const torsoGeom = new THREE.BoxGeometry(0.45, 3.4, 0.35);
+            const torso = new THREE.Mesh(torsoGeom, bodyMat);
+            torso.position.y = 3.6;
+            torso.castShadow = true;
+            group.add(torso);
+
+            // Cabeça sem feições
+            const headGeom = new THREE.SphereGeometry(0.32, 16, 16);
+            const head = new THREE.Mesh(headGeom, headMat);
+            head.position.y = 5.5;
+            head.castShadow = true;
+            group.add(head);
+
+            // Pernas extremamente compridas e finas
+            const legGeom = new THREE.CylinderGeometry(0.06, 0.05, 3.0, 6);
+            
+            const leftLeg = new THREE.Mesh(legGeom, bodyMat);
+            leftLeg.position.set(-0.24, 1.5, 0);
+            leftLeg.castShadow = true;
+            group.add(leftLeg);
+
+            const rightLeg = new THREE.Mesh(legGeom, bodyMat);
+            rightLeg.position.set(0.24, 1.5, 0);
+            rightLeg.castShadow = true;
+            group.add(rightLeg);
+
+            // Braços finos que descem abaixo do quadril
+            const armGeom = new THREE.CylinderGeometry(0.05, 0.03, 3.2, 6);
+            
+            const leftArm = new THREE.Mesh(armGeom, bodyMat);
+            leftArm.position.set(-0.4, 3.1, 0);
+            leftArm.rotation.z = Math.PI / 28;
+            leftArm.castShadow = true;
+            group.add(leftArm);
+
+            const rightArm = new THREE.Mesh(armGeom, bodyMat);
+            rightArm.position.set(0.4, 3.1, 0);
+            rightArm.rotation.z = -Math.PI / 28;
+            rightArm.castShadow = true;
+            group.add(rightArm);
+
+            // Olhos pretos profundos
+            const eyeGeom = new THREE.SphereGeometry(0.04, 6, 6);
+            const eyeMat = new THREE.MeshBasicMaterial({ color: 0x020202 });
+            
+            const leftEye = new THREE.Mesh(eyeGeom, eyeMat);
+            leftEye.position.set(-0.09, 5.55, 0.28);
+            group.add(leftEye);
+
+            const rightEye = new THREE.Mesh(eyeGeom, eyeMat);
+            rightEye.position.set(0.09, 5.55, 0.28);
+            group.add(rightEye);
+
+            return group;
+        }
+
+        // --- SPAWN DOS ELEMENTOS DO CENÁRIO ---
+        function spawnLocker(x, z) {
+            const lockerTex = generateMetalLockerTexture();
+            const group = new THREE.Group();
+
+            const geom = new THREE.BoxGeometry(3.0, 7.5, 2.5);
+            const mat = new THREE.MeshStandardMaterial({
+                map: lockerTex,
+                roughness: 0.8,
+                metalness: 0.5
+            });
+            const mesh = new THREE.Mesh(geom, mat);
+            mesh.position.y = 3.75;
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            group.add(mesh);
+
+            group.position.set(x, 0, z);
+            scene.add(group);
+            lockers.push(group);
+        }
+
+        function spawnPuddle(x, z) {
+            const puddleShape = new THREE.RingGeometry(0.1, 2.2, 16);
+            const puddleMat = new THREE.MeshStandardMaterial({
+                color: 0x0c0f12,
+                roughness: 0.01,
+                metalness: 0.9,
+                transparent: true,
+                opacity: 0.7
+            });
+            const mesh = new THREE.Mesh(puddleShape, puddleMat);
+            mesh.rotation.x = -Math.PI / 2;
+            mesh.position.set(x, 0.02, z);
+            scene.add(mesh);
+            puddles.push(mesh);
+        }
+
+        function spawnDistractionBottle(x, z) {
+            const group = new THREE.Group();
+
+            const bottleGeom = new THREE.CylinderGeometry(0.12, 0.12, 0.7, 8);
+            const neckGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.3, 8);
+            const greenGlassMat = new THREE.MeshStandardMaterial({
+                color: 0x244e18,
+                roughness: 0.1,
+                metalness: 0.9,
+                transparent: true,
+                opacity: 0.8
+            });
+
+            const body = new THREE.Mesh(bottleGeom, greenGlassMat);
+            body.position.y = 0.35;
+            group.add(body);
+
+            const neck = new THREE.Mesh(neckGeom, greenGlassMat);
+            neck.position.y = 0.8;
+            group.add(neck);
+
+            const light = new THREE.PointLight(0x44ff22, 0.4, 4);
+            light.position.y = 0.8;
+            group.add(light);
+
+            group.position.set(x, 0.2, z);
+            scene.add(group);
+            items.push(group);
+        }
+
+        function buildEscapeDuct(x, z) {
+            escapeDuct = new THREE.Group();
+
+            const frameGeom = new THREE.BoxGeometry(4.0, 4.0, 0.6);
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0x1b1b1e, metalness: 0.8, roughness: 0.5 });
+            const frame = new THREE.Mesh(frameGeom, frameMat);
+            frame.position.set(0, 2.0, 0.3);
+            escapeDuct.add(frame);
+
+            const interiorGeom = new THREE.BoxGeometry(3.2, 3.2, 0.4);
+            const interiorMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+            const interior = new THREE.Mesh(interiorGeom, interiorMat);
+            interior.position.set(0, 2.0, 0.1);
+            escapeDuct.add(interior);
+
+            const barGeom = new THREE.CylinderGeometry(0.04, 0.04, 3.2);
+            for(let i = -1.2; i <= 1.2; i += 0.6) {
+                const bar = new THREE.Mesh(barGeom, frameMat);
+                bar.position.set(i, 2.0, 0.45);
+                if (i === 0) bar.rotation.z = Math.PI / 4.5;
+                escapeDuct.add(bar);
+            }
+
+            escapeLight = new THREE.PointLight(0xff8800, 2.5, 14);
+            escapeLight.position.set(0, 3.8, 0.8);
+            escapeDuct.add(escapeLight);
+
+            escapeDuct.position.set(x, 0, z);
+            scene.add(escapeDuct);
+        }
+
+        function spawnKey(x, z) {
+            const keyGroup = new THREE.Group();
+            
+            const ringGeom = new THREE.TorusGeometry(0.25, 0.06, 6, 12);
+            const shaftGeom = new THREE.CylinderGeometry(0.04, 0.04, 0.8, 6);
+            const bitGeom = new THREE.BoxGeometry(0.12, 0.2, 0.06);
+
+            const goldMat = new THREE.MeshStandardMaterial({
+                color: 0xdb9f2b,
+                roughness: 0.1,
+                metalness: 0.9,
+                emissive: 0x3d2500
+            });
+
+            const ring = new THREE.Mesh(ringGeom, goldMat);
+            ring.position.y = 0.4;
+            keyGroup.add(ring);
+
+            const shaft = new THREE.Mesh(shaftGeom, goldMat);
+            shaft.position.y = -0.1;
+            keyGroup.add(shaft);
+
+            const bit = new THREE.Mesh(bitGeom, goldMat);
+            bit.position.set(0.1, -0.3, 0);
+            keyGroup.add(bit);
+
+            const pLight = new THREE.PointLight(0xffaa00, 1.4, 6);
+            pLight.position.y = 0.5;
+            keyGroup.add(pLight);
+
+            keyGroup.position.set(x, 1.6, z);
+            scene.add(keyGroup);
+            keys.push(keyGroup);
+        }
+
+        // --- INICIALIZAÇÃO DA SCENE GRÁFICA (COM FOV AMPLO) ---
+        function initEngine() {
+            clock = new THREE.Clock();
+            scene = new THREE.Scene();
+            scene.fog = new THREE.FogExp2(0x000000, 0.06);
+
+            // Aumento de FOV para 85 graus (Campo Visual Muito Mais Amplo)
+            camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.1, 1000);
+            
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+            const container = document.getElementById('canvas-container');
+            container.appendChild(renderer.domElement);
+
+            window.addEventListener('resize', onWindowResize);
+
+            // Carrega texturas
+            const wallTex = generateBrickTexture();
+            const floorTex = generateFloorTexture();
+            wallTex.wrapS = wallTex.wrapT = THREE.RepeatWrapping;
+            floorTex.wrapS = floorTex.wrapT = THREE.RepeatWrapping;
+
+            const wallMaterial = new THREE.MeshStandardMaterial({ map: wallTex, roughness: 0.95 });
+            const floorMaterial = new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.9, metalness: 0.1 });
+            const ceilingMat = new THREE.MeshStandardMaterial({ color: 0x060608, roughness: 0.95 });
+
+            const wallGeometry = new THREE.BoxGeometry(cellSize, cellSize, cellSize);
+            const planeGeometry = new THREE.PlaneGeometry(cellSize, cellSize);
+
+            // Montagem do Mapa
+            for(let r=0; r<mapSize; r++) {
+                mapGrid[r] = [];
+                for(let c=0; c<mapSize; c++) {
+                    const blockType = mapLayout[r][c];
+                    mapGrid[r][c] = blockType;
+
+                    const x = c * cellSize - (mapSize * cellSize) / 2 + cellSize / 2;
+                    const z = r * cellSize - (mapSize * cellSize) / 2 + cellSize / 2;
+
+                    // Chão
+                    const floor = new THREE.Mesh(planeGeometry, floorMaterial);
+                    floor.rotation.x = -Math.PI / 2;
+                    floor.position.set(x, 0, z);
+                    floor.receiveShadow = true;
+                    scene.add(floor);
+
+                    // Teto
+                    const ceiling = new THREE.Mesh(planeGeometry, ceilingMat);
+                    ceiling.rotation.x = Math.PI / 2;
+                    ceiling.position.set(x, cellSize, z);
+                    scene.add(ceiling);
+
+                    if (blockType === 1) {
+                        const wall = new THREE.Mesh(wallGeometry, wallMaterial);
+                        wall.position.set(x, cellSize / 2, z);
+                        wall.castShadow = true;
+                        wall.receiveShadow = true;
+                        scene.add(wall);
+                        wallMeshes.push(wall);
+                    } else if (blockType === 2) {
+                        // Posiciona Player Spawn temporariamente
+                        camera.position.set(x, 3.8, z);
+                    } else if (blockType === 3) {
+                        spawnKey(x, z);
+                    } else if (blockType === 4) {
+                        spawnDistractionBottle(x, z);
+                    } else if (blockType === 5) {
+                        stalker = buildObserverModel();
+                        stalker.position.set(x, 0, z);
+                        scene.add(stalker);
+                    } else if (blockType === 6) {
+                        buildEscapeDuct(x, z - 4.5);
+                    } else if (blockType === 7) {
+                        spawnLocker(x, z);
+                    } else if (blockType === 8) {
+                        spawnPuddle(x, z);
+                    }
+                }
+            }
+
+            // Luzes
+            ambientLight = new THREE.AmbientLight(0x010103, 0.05);
+            scene.add(ambientLight);
+
+            // Lanterna acoplada ao player
+            flashlight = new THREE.SpotLight(0xfff6ea, 3.2, 55, Math.PI / 6, 0.7, 1);
+            flashlight.castShadow = true;
+            flashlight.shadow.mapSize.width = 1024;
+            flashlight.shadow.mapSize.height = 1024;
+            flashlight.shadow.camera.near = 0.5;
+            flashlight.shadow.camera.far = 60;
+            flashlight.shadow.bias = -0.001;
+            
+            camera.add(flashlight);
+            flashlight.position.set(0, 0, 0);
+
+            const flTarget = new THREE.Object3D();
+            flTarget.position.set(0, 0, -1);
+            camera.add(flTarget);
+            flashlight.target = flTarget;
+
+            scene.add(camera);
+
+            // NOVO: Luz oscilante vermelha para o Menu de FNAF (focando o monstro)
+            menuFlickerLight = new THREE.PointLight(0xff0000, 3.0, 18);
+            menuFlickerLight.position.set(stalker.position.x, 6.0, stalker.position.z + 2.5);
+            scene.add(menuFlickerLight);
+
+            // Ativa o posicionamento de câmera do Menu Principal (Encarando o monstro de pertinho)
+            setCameraToMenuScene();
+        }
+
+        // NOVO: Define a câmera do FNAF encarando o monstro de pertinho com estática
+        function setCameraToMenuScene() {
+            GameState.isMenuMode = true;
+            GameState.isPlaying = false;
+            
+            // Foca a câmera diretamente no rosto pálido do Stalker
+            camera.position.set(stalker.position.x, 5.3, stalker.position.z + 5.5);
+            playerRotation.yaw = Math.PI; // Encarando a criatura
+            playerRotation.pitch = -0.1;
+            camera.rotation.set(0, 0, 0);
+            camera.rotation.y = playerRotation.yaw;
+            camera.rotation.x = playerRotation.pitch;
+
+            flashlight.intensity = 0.0; // Lanterna apagada no menu
+            menuFlickerLight.intensity = 3.0;
+        }
+
+        // Transiciona a câmera da cena de FNAF para o spawn do jogador
+        function setCameraToGameplayScene() {
+            GameState.isMenuMode = false;
+            
+            // Procura Spawn correto do jogador
+            for(let r=0; r<mapSize; r++) {
+                for(let c=0; c<mapSize; c++) {
+                    if (mapLayout[r][c] === 2) {
+                        const x = c * cellSize - (mapSize * cellSize) / 2 + cellSize / 2;
+                        const z = r * cellSize - (mapSize * cellSize) / 2 + cellSize / 2;
+                        camera.position.set(x, 3.8, z);
+                    }
+                }
+            }
+
+            playerRotation = { yaw: 0, pitch: 0 };
+            camera.rotation.set(0, 0, 0);
+            
+            flashlight.intensity = 3.2; // Liga lanterna
+            menuFlickerLight.intensity = 0.0; // Desliga luz de fundo do menu
+        }
+
+        // --- SISTEMAS DE CONTROLE E VISUALIZAÇÃO ---
+        let isPointerLocked = false;
+        function setupControls() {
+            // Teclado
+            const onKeyDown = (e) => {
+                if (!GameState.isPlaying) return;
+                switch (e.code) {
+                    case 'KeyW': case 'ArrowUp': moveDirection.forward = 1; break;
+                    case 'KeyS': case 'ArrowDown': moveDirection.backward = 1; break;
+                    case 'KeyA': case 'ArrowLeft': moveDirection.left = 1; break;
+                    case 'KeyD': case 'ArrowRight': moveDirection.right = 1; break;
+                    case 'KeyC': toggleCrouch(); break;
+                    case 'KeyE': triggerInteract(); break;
+                }
+            };
+
+            const onKeyUp = (e) => {
+                switch (e.code) {
+                    case 'KeyW': case 'ArrowUp': moveDirection.forward = 0; break;
+                    case 'KeyS': case 'ArrowDown': moveDirection.backward = 0; break;
+                    case 'KeyA': case 'ArrowLeft': moveDirection.left = 0; break;
+                    case 'KeyD': case 'ArrowRight': moveDirection.right = 0; break;
+                }
+            };
+
+            document.addEventListener('keydown', onKeyDown);
+            document.addEventListener('keyup', onKeyUp);
+
+            // Clique do mouse para arremessar garrafa
+            document.addEventListener('mousedown', (e) => {
+                if (GameState.isPlaying && isPointerLocked && e.button === 0) {
+                    throwBottle();
+                }
+            });
+
+            // Pointer Lock
+            const canvas = renderer.domElement;
+            canvas.addEventListener('click', () => {
+                if (GameState.isPlaying && !GameState.isMobile) {
+                    canvas.requestPointerLock();
+                }
+            });
+
+            document.addEventListener('pointerlockchange', () => {
+                isPointerLocked = document.pointerLockElement === canvas;
+            });
+
+            // Olhar do Mouse com Configuração de Inversão Específica
+            document.addEventListener('mousemove', (e) => {
+                if (isPointerLocked && GameState.isPlaying && !GameState.isHiding) {
+                    const lookSens = 0.0022 * ControlConfig.sensitivity;
+
+                    // Fatores de Inversão (X e Y)
+                    const factorX = ControlConfig.invertX ? -1 : 1;
+                    const factorY = ControlConfig.invertY ? -1 : 1;
+
+                    playerRotation.yaw += e.movementX * lookSens * factorX;
+                    playerRotation.pitch += e.movementY * lookSens * factorY;
+
+                    playerRotation.pitch = Math.max(-Math.PI / 2.3, Math.min(Math.PI / 2.3, playerRotation.pitch));
+
+                    camera.rotation.set(0, 0, 0);
+                    camera.rotation.y = playerRotation.yaw;
+                    camera.rotation.x = playerRotation.pitch;
+                }
+            });
+
+            // Mobile Check
+            if ('ontouchstart' in window || navigator.maxTouchPoints > 0) {
+                GameState.isMobile = true;
+                document.getElementById('joystick').style.display = 'block';
+                document.getElementById('crouch-btn').style.display = 'flex';
+                document.getElementById('throw-btn').style.display = 'flex';
+                document.getElementById('action-btn').style.display = 'flex';
+                setupMobileControls();
+            }
+        }
+
+        // Suporte Mobile horizontal robusto
+        function setupMobileControls() {
+            let touchLookId = null;
+            let lastTouchX = 0, lastTouchY = 0;
+
+            window.addEventListener('touchstart', (e) => {
+                for(let i=0; i<e.changedTouches.length; i++) {
+                    const t = e.changedTouches[i];
+                    if (t.clientX > window.innerWidth / 2) {
+                        touchLookId = t.identifier;
+                        lastTouchX = t.clientX;
+                        lastTouchY = t.clientY;
+                        break;
+                    }
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchmove', (e) => {
+                for(let i=0; i<e.changedTouches.length; i++) {
+                    const t = e.changedTouches[i];
+                    if (t.identifier === touchLookId && !GameState.isHiding) {
+                        const dx = t.clientX - lastTouchX;
+                        const dy = t.clientY - lastTouchY;
+
+                        const lookSens = 0.004 * ControlConfig.sensitivity;
+                        const factorX = ControlConfig.invertX ? -1 : 1;
+                        const factorY = ControlConfig.invertY ? -1 : 1;
+
+                        playerRotation.yaw += dx * lookSens * factorX;
+                        playerRotation.pitch += dy * lookSens * factorY;
+                        playerRotation.pitch = Math.max(-Math.PI / 2.4, Math.min(Math.PI / 2.4, playerRotation.pitch));
+
+                        camera.rotation.set(0, 0, 0);
+                        camera.rotation.y = playerRotation.yaw;
+                        camera.rotation.x = playerRotation.pitch;
+
+                        lastTouchX = t.clientX;
+                        lastTouchY = t.clientY;
+                        break;
+                    }
+                }
+            }, { passive: true });
+
+            window.addEventListener('touchend', (e) => {
+                for(let i=0; i<e.changedTouches.length; i++) {
+                    if (e.changedTouches[i].identifier === touchLookId) {
+                        touchLookId = null;
+                        break;
+                    }
+                }
+            });
+
+            // Listeners botões virtuais
+            document.getElementById('crouch-btn').addEventListener('touchstart', (e) => {
+                e.preventDefault(); toggleCrouch();
+            });
+
+            document.getElementById('throw-btn').addEventListener('touchstart', (e) => {
+                e.preventDefault(); throwBottle();
+            });
+
+            document.getElementById('action-btn').addEventListener('touchstart', (e) => {
+                e.preventDefault(); triggerInteract();
+            });
+
+            // Joystick Virtual Esquerdo
+            const joyZone = document.getElementById('joystick');
+            const joyHandle = document.getElementById('joystick-handle');
+            let joyActive = false;
+            let joyTouchId = null;
+            let joyCenter = { x: 0, y: 0 };
+
+            joyZone.addEventListener('touchstart', (e) => {
+                const rect = joyZone.getBoundingClientRect();
+                joyCenter = {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2
+                };
+                joyTouchId = e.changedTouches[0].identifier;
+                joyActive = true;
+            }, { passive: true });
+
+            joyZone.addEventListener('touchmove', (e) => {
+                if (!joyActive) return;
+                for(let i=0; i<e.changedTouches.length; i++) {
+                    const t = e.changedTouches[i];
+                    if (t.identifier === joyTouchId) {
+                        const dx = t.clientX - joyCenter.x;
+                        const dy = t.clientY - joyCenter.y;
+                        const dist = Math.min(Math.sqrt(dx*dx + dy*dy), 40);
+
+                        const angle = Math.atan2(dy, dx);
+                        const moveX = Math.cos(angle) * dist;
+                        const moveY = Math.sin(angle) * dist;
+
+                        joyHandle.style.transform = `translate(${moveX}px, ${moveY}px)`;
+
+                        const normX = moveX / 40;
+                        const normY = moveY / 40;
+
+                        moveDirection.forward = normY < -0.2 ? -normY : 0;
+                        moveDirection.backward = normY > 0.2 ? normY : 0;
+                        moveDirection.left = normX < -0.2 ? -normX : 0;
+                        moveDirection.right = normX > 0.2 ? normX : 0;
+                        break;
+                    }
+                }
+            }, { passive: true });
+
+            const stopJoy = () => {
+                joyActive = false;
+                joyTouchId = null;
+                joyHandle.style.transform = 'translate(0px,0px)';
+                moveDirection.forward = moveDirection.backward = moveDirection.left = moveDirection.right = 0;
+            };
+
+            joyZone.addEventListener('touchend', stopJoy);
+            joyZone.addEventListener('touchcancel', stopJoy);
+        }
+
+        // Agachar
+        function toggleCrouch() {
+            if (GameState.isHiding) return;
+            GameState.isCrouching = !GameState.isCrouching;
+            const poseText = document.getElementById('player-pose-text');
+            const crouchBtn = document.getElementById('crouch-btn');
+
+            if (GameState.isCrouching) {
+                poseText.textContent = "AGACHADO (FURTIVO)";
+                poseText.className = "text-yellow-500 font-bold tracking-wider uppercase mt-1";
+                if(crouchBtn) crouchBtn.classList.add('bg-yellow-900');
+            } else {
+                poseText.textContent = "EM PÉ";
+                poseText.className = "text-green-500 font-bold tracking-wider uppercase mt-1";
+                if(crouchBtn) crouchBtn.classList.remove('bg-yellow-900');
+            }
+        }
+
+        // Arremesso
+        function throwBottle() {
+            if (GameState.bottlesCount <= 0 || GameState.isThrowing || GameState.isHiding) return;
+            
+            GameState.isThrowing = true;
+            GameState.bottlesCount--;
+            updateBottlesHUD();
+
+            showPrompt("Garrafa vazia arremessada!");
+            audioSys.playSfx(200, 0.22, 'triangle', 0.2);
+
+            const bottleGeom = new THREE.CylinderGeometry(0.12, 0.12, 0.6, 6);
+            const bottleMat = new THREE.MeshBasicMaterial({ color: 0x3d5a2b });
+            const bottleMesh = new THREE.Mesh(bottleGeom, bottleMat);
+            
+            bottleMesh.position.copy(camera.position);
+            scene.add(bottleMesh);
+
+            const throwDir = new THREE.Vector3();
+            camera.getWorldDirection(throwDir);
+
+            let velocity = throwDir.multiplyScalar(22.0);
+            velocity.y += 4.5; // Curva suave para cima
+
+            activeThrownBottle = {
+                mesh: bottleMesh,
+                velocity: velocity,
+                spawnTime: Date.now()
+            };
+        }
+
+        function updateBottlesHUD() {
+            document.getElementById('inventory-bottles').innerHTML = `
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M15.362 5.214A8.252 8.252 0 0112 21 8.25 8.25 0 016.038 7.048 8.287 8.287 0 009 9.6a8.983 8.983 0 013.361-6.867 8.21 8.21 0 003 2.48z"/>
+                </svg>
+                <span>GARRAFAS: ${GameState.bottlesCount}/3</span>
+            `;
+        }
+
+        // Esconder
+        function triggerInteract() {
+            if (GameState.isHiding) {
+                GameState.isHiding = false;
+                GameState.activeLocker = null;
+                showPrompt("Você saiu do armário.");
+                audioSys.playSfx(110, 0.5, 'sawtooth', 0.15);
+                
+                document.getElementById('player-pose-text').textContent = GameState.isCrouching ? "AGACHADO (FURTIVO)" : "EM PÉ";
+                document.getElementById('player-pose-text').className = GameState.isCrouching ? "text-yellow-500 font-bold" : "text-green-500 font-bold";
+                return;
+            }
+
+            for(let locker of lockers) {
+                const dist = camera.position.distanceTo(locker.position);
+                if (dist < 5.2) {
+                    GameState.isHiding = true;
+                    GameState.activeLocker = locker;
+                    
+                    camera.position.set(locker.position.x, 3.8, locker.position.z + 0.8);
+                    playerRotation.yaw = 0;
+                    playerRotation.pitch = 0;
+                    camera.rotation.set(0, 0, 0);
+
+                    moveDirection.forward = moveDirection.backward = moveDirection.left = moveDirection.right = 0;
+
+                    showPrompt("ESCONDIDO - PRENDA A RESPIRAÇÃO");
+                    audioSys.playSfx(85, 0.6, 'sawtooth', 0.18);
+
+                    document.getElementById('player-pose-text').textContent = "ESCONDIDO (SEGURO)";
+                    document.getElementById('player-pose-text').className = "text-blue-500 font-bold uppercase mt-1";
+                    break;
+                }
+            }
+        }
+
+        // --- SISTEMA DE VISIBILIDADE FRUSTUM ---
+        function isMonsterInFOV() {
+            if (!stalker) return false;
+
+            const playerToStalker = new THREE.Vector3().subVectors(stalker.position, camera.position).normalize();
+            const cameraDirection = new THREE.Vector3();
+            camera.getWorldDirection(cameraDirection);
+
+            const dot = cameraDirection.dot(playerToStalker);
+            if (dot > 0.58) {
+                const raycaster = new THREE.Raycaster(camera.position, playerToStalker);
+                const intersects = raycaster.intersectObjects(wallMeshes);
+                const distToMonster = camera.position.distanceTo(stalker.position);
+
+                if (intersects.length > 0 && intersects[0].distance < distToMonster) {
+                    return false;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        // --- TRATAMENTO DE COLISÕES ---
+        function checkCollisions(futurePos) {
+            const points = [
+                { x: futurePos.x - playerRadius, z: futurePos.z - playerRadius },
+                { x: futurePos.x + playerRadius, z: futurePos.z - playerRadius },
+                { x: futurePos.x - playerRadius, z: futurePos.z + playerRadius },
+                { x: futurePos.x + playerRadius, z: futurePos.z + playerRadius },
+                { x: futurePos.x, z: futurePos.z }
+            ];
+
+            for (let pt of points) {
+                const col = Math.floor((pt.x + (mapSize * cellSize) / 2) / cellSize);
+                const row = Math.floor((pt.z + (mapSize * cellSize) / 2) / cellSize);
+
+                if (row < 0 || row >= mapSize || col < 0 || col >= mapSize) return true;
+                if (mapGrid[row][col] === 1) return true;
+            }
+            return false;
+        }
+
+        function getWalkablePositions() {
+            const locations = [];
+            for(let r=0; r<mapSize; r++) {
+                for(let c=0; c<mapSize; c++) {
+                    if (mapGrid[r][c] !== 1) {
+                        locations.push({
+                            x: c * cellSize - (mapSize * cellSize) / 2 + cellSize / 2,
+                            z: r * cellSize - (mapSize * cellSize) / 2 + cellSize / 2
+                        });
+                    }
+                }
+            }
+            return locations;
+        }
+
+        // --- LOOP PRINCIPAL DE SIMULAÇÃO ---
+        function animate() {
+            requestAnimationFrame(animate);
+
+            const delta = clock.getDelta();
+            const now = Date.now();
+
+            // --- SE ESTIVER NO MODO MENU (FNAF CAMERA TRAVADA) ---
+            if (GameState.isMenuMode) {
+                // Efeito clássico FNAF: Espasmos sutis do monstro encarando a câmera
+                if (stalker) {
+                    // O monstro respira e mexe a cabeça aleatoriamente
+                    stalker.position.y = Math.sin(now * 0.002) * 0.1;
+                    
+                    if (Math.random() < 0.02) {
+                        // Glitch mental/espasmo na cabeça do observador
+                        stalker.children[1].rotation.z = (Math.random() - 0.5) * 0.4;
+                        stalker.children[1].rotation.x = (Math.random() - 0.5) * 0.2;
+                    }
+                }
+
+                // Luz piscando instável sobre o monstro
+                if (menuFlickerLight) {
+                    if (Math.random() < 0.08) {
+                        menuFlickerLight.intensity = Math.random() < 0.1 ? 0.0 : 3.5;
+                    }
+                }
+
+                renderer.render(scene, camera);
+                return;
+            }
+
+            // --- CASO CONTRÁRIO, ESTÁ EM GAMEPLAY ---
+            if (!GameState.isPlaying || GameState.escaped) return;
+
+            // --- 1. Física e Movimento ---
+            let movementMagnitude = 0;
+            if (!GameState.isHiding) {
+                const front = new THREE.Vector3(0, 0, -1).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerRotation.yaw);
+                const side = new THREE.Vector3(1, 0, 0).applyAxisAngle(new THREE.Vector3(0, 1, 0), playerRotation.yaw);
+
+                const input = new THREE.Vector3();
+                if (moveDirection.forward) input.addScaledVector(front, moveDirection.forward);
+                if (moveDirection.backward) input.addScaledVector(front, -moveDirection.backward);
+                if (moveDirection.left) input.addScaledVector(side, -moveDirection.left);
+                if (moveDirection.right) input.addScaledVector(side, moveDirection.right);
+
+                input.normalize();
+                movementMagnitude = input.length();
+
+                const speed = GameState.isCrouching ? basePlayerSpeed * 0.35 : basePlayerSpeed;
+                playerVelocity.copy(input).multiplyScalar(speed);
+
+                const nextPos = camera.position.clone().addScaledVector(playerVelocity, delta);
+
+                const testX = camera.position.clone(); testX.x = nextPos.x;
+                if (!checkCollisions(testX)) camera.position.x = nextPos.x;
+
+                const testZ = camera.position.clone(); testZ.z = nextPos.z;
+                if (!checkCollisions(testZ)) camera.position.z = nextPos.z;
+            }
+
+            // --- 2. Barra e Monitor de Ruídos ---
+            let baseNoise = 0;
+            if (movementMagnitude > 0) {
+                baseNoise = GameState.isCrouching ? 4 : 55;
+
+                let onPuddle = false;
+                for(let puddle of puddles) {
+                    const distToPuddle = camera.position.distanceTo(puddle.position);
+                    if (distToPuddle < 2.0) {
+                        onPuddle = true;
+                        break;
+                    }
+                }
+
+                if (onPuddle) {
+                    baseNoise = GameState.isCrouching ? 20 : 95;
+                    if (Math.sin(now * 0.01) > 0.9) {
+                        audioSys.playSfx(220, 0.1, 'sine', 0.25);
+                    }
+                } else if (Math.sin(now * 0.008) > 0.95) {
+                    const stepPitch = GameState.isCrouching ? 75 : 120;
+                    const stepVol = GameState.isCrouching ? 0.03 : 0.14;
+                    audioSys.playSfx(stepPitch, 0.07, 'triangle', stepVol);
+                }
+            }
+
+            GameState.currentNoise = THREE.MathUtils.lerp(GameState.currentNoise, baseNoise, 0.2);
+
+            const meterBar = document.getElementById('noise-meter-bar');
+            meterBar.style.width = GameState.currentNoise + '%';
+            if (GameState.currentNoise > 60) {
+                meterBar.className = "h-full bg-red-600 transition-all duration-300";
+            } else if (GameState.currentNoise > 15) {
+                meterBar.className = "h-full bg-yellow-500 transition-all duration-300";
+            } else {
+                meterBar.className = "h-full bg-zinc-600 transition-all duration-300";
+            }
+
+            // --- 3. Balanço de Cabeça ---
+            if (!GameState.isHiding) {
+                const eyeHeight = GameState.isCrouching ? 2.0 : 3.8;
+                if (movementMagnitude > 0) {
+                    const bob = Math.sin(now * 0.0075) * (GameState.isCrouching ? 0.05 : 0.14);
+                    camera.position.y = THREE.MathUtils.lerp(camera.position.y, eyeHeight + bob, 0.2);
+                } else {
+                    camera.position.y = THREE.MathUtils.lerp(camera.position.y, eyeHeight + Math.sin(now * 0.001) * 0.03, 0.1);
+                }
+            }
+
+            // --- 4. Trajetória Física da Garrafa ---
+            if (activeThrownBottle) {
+                const b = activeThrownBottle;
+                b.velocity.y -= 9.8 * delta;
+                b.mesh.position.addScaledVector(b.velocity, delta);
+
+                b.mesh.rotation.x += delta * 5;
+                b.mesh.rotation.y += delta * 2;
+
+                let colX = Math.floor((b.mesh.position.x + (mapSize * cellSize) / 2) / cellSize);
+                let colZ = Math.floor((b.mesh.position.z + (mapSize * cellSize) / 2) / cellSize);
+
+                let collided = false;
+                if (colX < 0 || colX >= mapSize || colZ < 0 || colZ >= mapSize || mapGrid[colZ][colX] === 1) {
+                    collided = true;
+                } else if (b.mesh.position.y <= 0.3) {
+                    collided = true;
+                }
+
+                if (collided) {
+                    audioSys.playGlassBreak();
+                    targetInvestigationPoint = b.mesh.position.clone();
+                    stalkerState = "INVESTIGATING";
+
+                    scene.remove(b.mesh);
+                    activeThrownBottle = null;
+                    GameState.isThrowing = false;
+                    showPrompt("A garrafa quebrou! Investigando fonte...");
+                }
+            }
+
+            // --- 5. Bateria da Lanterna ---
+            if (GameState.flashlightOn) {
+                GameState.battery = Math.max(0, GameState.battery - delta * 0.65);
+                document.getElementById('battery-pct').textContent = Math.floor(GameState.battery) + '%';
+                document.getElementById('battery-bar').style.width = GameState.battery + '%';
+
+                if (GameState.battery < 20 && GameState.battery > 0) {
+                    flashlight.intensity = Math.random() < 0.1 ? 0.2 : 3.2;
+                } else if (GameState.battery === 0) {
+                    flashlight.intensity = 0.0;
+                    GameState.flashlightOn = false;
+                } else {
+                    flashlight.intensity = 3.2;
+                }
+            }
+
+            // --- 6. Coleta de Chaves ---
+            for(let i = keys.length - 1; i >= 0; i--) {
+                const k = keys[i];
+                k.rotation.y += delta * 1.5;
+                k.position.y = 1.6 + Math.sin(now * 0.003 + k.position.x) * 0.1;
+
+                if (camera.position.distanceTo(k.position) < 2.5) {
+                    scene.remove(k);
+                    keys.splice(i, 1);
+                    GameState.keysCollected++;
+                    audioSys.playSfx(550, 0.4, 'sine', 0.25);
+                    
+                    document.getElementById('keys-counter').innerHTML = `
+                        CHAVES: ${GameState.keysCollected} / ${GameState.totalKeys}
+                    `;
+                    
+                    if (GameState.keysCollected >= GameState.totalKeys) {
+                        showPrompt("Sistemas de saída energizados! Vá para o exaustor!");
+                    } else {
+                        showPrompt(`Chave resgatada (${GameState.keysCollected}/${GameState.totalKeys})`);
+                    }
+                }
+            }
+
+            // --- 7. Coleta de Garrafas ---
+            for(let i = items.length - 1; i >= 0; i--) {
+                const b = items[i];
+                b.rotation.y += delta * 1.2;
+                if (camera.position.distanceTo(b.position) < 2.5 && GameState.bottlesCount < 3) {
+                    scene.remove(b);
+                    items.splice(i, 1);
+                    GameState.bottlesCount++;
+                    updateBottlesHUD();
+                    audioSys.playSfx(440, 0.2, 'sine', 0.2);
+                    showPrompt("Garrafa vazia adicionada ao inventário.");
+                }
+            }
+
+            // --- 8. Retículo e Prompt de Ação ---
+            let nearLocker = false;
+            if (!GameState.isHiding) {
+                for(let l of lockers) {
+                    if (camera.position.distanceTo(l.position) < 5.2) {
+                        nearLocker = true;
+                        break;
+                    }
+                }
+            }
+            const tip = document.getElementById('interact-tip');
+            if (nearLocker) {
+                tip.style.opacity = '1';
+                tip.textContent = "[E] Esconder-se";
+            } else if (GameState.isHiding) {
+                tip.style.opacity = '1';
+                tip.textContent = "[E] Sair do Esconderijo";
+            } else {
+                tip.style.opacity = '0';
+            }
+
+            // --- 9. Inteligência Artificial do Observador ---
+            if (stalker && !GameState.isScreamerActive) {
+                const distToPlayer = stalker.position.distanceTo(camera.position);
+                const isLookedAt = isMonsterInFOV();
+
+                // Estática de aproximação
+                const noiseScreen = document.getElementById('screen-noise');
+                if (distToPlayer < 40 && isLookedAt && !GameState.isHiding) {
+                    noiseScreen.classList.add('heavy-interference');
+                    if (Math.random() < 0.15) audioSys.playSfx(95 + Math.random()*150, 0.05, 'sawtooth', 0.08);
+                } else {
+                    noiseScreen.classList.remove('heavy-interference');
+                }
+
+                // Condição de Esconderijo
+                if (GameState.isHiding) {
+                    if (distToPlayer < 8.0 && GameState.currentNoise > 15) {
+                        triggerScreamer(); // Encontrado dentro do armário por fazer barulho
+                    }
+                    if (stalkerState === "ATTACKING") {
+                        stalkerState = "INVESTIGATING";
+                        targetInvestigationPoint = camera.position.clone();
+                    }
+                }
+
+                if (isLookedAt && !GameState.isHiding) {
+                    // Paralisado sob olhar
+                    const lookAngle = Math.atan2(camera.position.x - stalker.position.x, camera.position.z - stalker.position.z);
+                    stalker.rotation.y = lookAngle;
+
+                    // Espasmo sob foco direto
+                    if (Math.random() < 0.05) {
+                        stalker.children[1].rotation.z = (Math.random() - 0.5) * 0.35;
+                    }
+
+                    if (distToPlayer < 4.0) {
+                        triggerScreamer();
+                    }
+                } else {
+                    // Sem olhar
+                    if (stalkerState === "ATTACKING") {
+                        const dir = new THREE.Vector3().subVectors(camera.position, stalker.position);
+                        dir.y = 0; dir.normalize();
+                        
+                        const speed = 9.8 + (GameState.keysCollected * 1.0);
+                        stalker.position.addScaledVector(dir, speed * delta);
+
+                        if (distToPlayer < 4.0) {
+                            triggerScreamer();
+                        }
+                    } else if (stalkerState === "INVESTIGATING" && targetInvestigationPoint) {
+                        const dir = new THREE.Vector3().subVectors(targetInvestigationPoint, stalker.position);
+                        dir.y = 0;
+                        const distToTarget = dir.length();
+                        dir.normalize();
+
+                        stalker.position.addScaledVector(dir, 6.5 * delta);
+                        stalker.rotation.y = Math.atan2(dir.x, dir.z);
+
+                        if (distToTarget < 3.0) {
+                            stalkerState = "STALKING";
+                            targetInvestigationPoint = null;
+                        }
+                    } else {
+                        // Stalking padrão: Teleportes furtivos fora do campo visual
+                        if (GameState.currentNoise > 50) {
+                            stalkerState = "ATTACKING";
+                            audioSys.playSfx(100, 0.4, 'sawtooth', 0.2);
+                        } else if (now - lastStalkerTeleportTime > 4500) {
+                            const spots = getWalkablePositions();
+                            const validSpots = spots.filter(pos => {
+                                const temp = new THREE.Vector3(pos.x, 0, pos.z);
+                                const dist = temp.distanceTo(camera.position);
+                                if (dist > 18 && dist < 40) {
+                                    const toSpot = new THREE.Vector3().subVectors(temp, camera.position).normalize();
+                                    const cDir = new THREE.Vector3();
+                                    camera.getWorldDirection(cDir);
+                                    const dot = cDir.dot(toSpot);
+                                    return dot < 0.45; // Fora do campo visual
+                                }
+                                return false;
+                            });
+
+                            if (validSpots.length > 0) {
+                                const rSpot = validSpots[Math.floor(Math.random() * validSpots.length)];
+                                stalker.position.set(rSpot.x, 0, rSpot.z);
+                                lastStalkerTeleportTime = now;
+                            }
+                        }
+                    }
+                }
+            }
+
+            // --- 10. Vitória ---
+            if (escapeDuct && GameState.keysCollected >= GameState.totalKeys) {
+                const distToExit = camera.position.distanceTo(escapeDuct.position);
+                if (distToExit < 4.8) {
+                    triggerEscapeSequence();
+                }
+            }
+
+            renderer.render(scene, camera);
+        }
+
+        // --- VITÓRIA CINEMÁTICA ---
+        function triggerEscapeSequence() {
+            GameState.escaped = true;
+            GameState.isPlaying = false;
+            document.exitPointerLock();
+
+            audioSys.playSfx(480, 1.8, 'sine', 0.2);
+            
+            const endScreen = document.getElementById('end-screen');
+            const endTitle = document.getElementById('end-title');
+            const endSubtitle = document.getElementById('end-subtitle');
+
+            document.getElementById('hud').style.opacity = '0';
+            endScreen.classList.remove('hidden');
+
+            endTitle.textContent = "NIGHT SURVIVED";
+            endTitle.className = "text-5xl md:text-7xl font-black text-green-500 tracking-[0.25em] mb-4 uppercase animate-pulse";
+            
+            endSubtitle.innerHTML = `
+                <span class="text-white font-bold block mb-4">SISTEMA DE EXAUSTÃO ATIVADO COM SUCESSO</span>
+                As engrenagens enferrujadas do duto se abriram e você rastejou desesperadamente para fora da instalação militar.
+                <br><br>
+                A noite fria da floresta nunca pareceu tão reconfortante. O Observador permanece trancado sob o concreto, mas suas feições ainda assombram sua mente.
+                <br><br>
+                <span class="text-zinc-600 text-xs tracking-wider block mt-4">EXPERIÊNCIA CONCLUÍDA. PROTOCOLO FAZBEAR COMPLETO.</span>
+            `;
+        }
+
+        // --- JUMPSCARE CLÁSSICO FNAF ---
+        function triggerScreamer() {
+            GameState.isScreamerActive = true;
+            audioSys.playJumpscare();
+
+            const target = stalker.position.clone();
+            target.y = 5.4;
+            camera.lookAt(target);
+
+            document.body.classList.add('heavy-interference');
+            document.getElementById('hud').style.opacity = '0';
+
+            // Vibração pesada
+            let ticks = 0;
+            const shake = setInterval(() => {
+                if(ticks > 30) clearInterval(shake);
+                camera.position.x += (Math.random() - 0.5) * 0.7;
+                camera.position.y += (Math.random() - 0.5) * 0.7;
+                ticks++;
+            }, 30);
+
+            setTimeout(() => {
+                document.body.classList.remove('heavy-interference');
+                showGameOver();
+            }, 1400);
+        }
+
+        function showGameOver() {
+            GameState.isPlaying = false;
+            document.exitPointerLock();
+
+            const endScreen = document.getElementById('end-screen');
+            const endTitle = document.getElementById('end-title');
+            const endSubtitle = document.getElementById('end-subtitle');
+
+            endScreen.classList.remove('hidden');
+            endTitle.textContent = "GAME OVER";
+            endTitle.className = "text-6xl md:text-8xl font-black text-red-700 tracking-widest uppercase mb-4";
+            endSubtitle.textContent = "Você falhou em monitorar os pontos cegos. Sua presença física foi desintegrada pelo Observador.";
+        }
+
+        // Reseta todos os estados
+        function restartGame() {
+            for(let k of keys) scene.remove(k);
+            for(let l of lockers) scene.remove(l);
+            for(let p of puddles) scene.remove(p);
+            for(let i of items) scene.remove(i);
+            if (stalker) scene.remove(stalker);
+
+            keys = []; lockers = []; puddles = []; items = [];
+            
+            GameState.keysCollected = 0;
+            GameState.bottlesCount = 0;
+            GameState.battery = 100;
+            GameState.flashlightOn = true;
+            GameState.isScreamerActive = false;
+            GameState.escaped = false;
+            GameState.isCrouching = false;
+            GameState.isHiding = false;
+            GameState.activeLocker = null;
+
+            // Retorna ao Menu no restart para manter a imersão de FNAF
+            document.getElementById('end-screen').classList.add('hidden');
+            setCameraToMenuScene();
+
+            document.getElementById('main-menu').classList.remove('hidden');
+            setTimeout(() => {
+                document.getElementById('main-menu').style.opacity = '1';
+            }, 100);
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // --- SISTEMAS DE ABAS DO MENU DE FNAF ---
+        function setupMainMenuTabs() {
+            // Iniciar Jogo (Acesso para Gameplay)
+            document.getElementById('menu-start-btn').addEventListener('click', () => {
+                document.getElementById('main-menu').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('main-menu').classList.add('hidden');
+                    
+                    // Transiciona Câmera e Ativa Loop de Jogo
+                    setCameraToGameplayScene();
+                    GameState.isPlaying = true;
+                    document.getElementById('hud').style.opacity = '1';
+                    showPrompt("Turno de guarda iniciado. Vigie as rotas.");
+                    
+                    if (!GameState.isMobile) {
+                        renderer.domElement.requestPointerLock();
+                    }
+                }, 1000);
+            });
+
+            // Calibração (Ajustes de Eixos)
+            document.getElementById('menu-config-btn').addEventListener('click', () => {
+                document.getElementById('calibration-overlay').classList.remove('hidden');
+            });
+
+            document.getElementById('close-calibration-btn').addEventListener('click', () => {
+                document.getElementById('calibration-overlay').classList.add('hidden');
+            });
+
+            // Diretrizes (Manual)
+            document.getElementById('menu-guide-btn').addEventListener('click', () => {
+                document.getElementById('guidelines-overlay').classList.remove('hidden');
+            });
+
+            document.getElementById('close-guidelines-btn').addEventListener('click', () => {
+                document.getElementById('guidelines-overlay').classList.add('hidden');
+            });
+
+            // Configuração dos eixos instanciados no painel
+            document.getElementById('invert-y-check').addEventListener('change', (e) => {
+                ControlConfig.invertY = e.target.checked;
+            });
+
+            document.getElementById('invert-x-check').addEventListener('change', (e) => {
+                ControlConfig.invertX = e.target.checked;
+            });
+
+            const sensSlider = document.getElementById('sensitivity-slider');
+            const sensText = document.getElementById('sens-val-text');
+            sensSlider.addEventListener('input', (e) => {
+                ControlConfig.sensitivity = parseFloat(e.target.value);
+                sensText.textContent = ControlConfig.sensitivity.toFixed(1) + 'x';
+            });
+        }
+
+        // Mostrar Avisos HUD
+        function showPrompt(text) {
+            const el = document.getElementById('game-prompt');
+            el.textContent = text;
+            el.style.opacity = '1';
+            setTimeout(() => {
+                el.style.opacity = '0';
+            }, 3000);
+        }
+
+        // --- START DO PROGRAMA ---
+        window.onload = function() {
+            initEngine();
+            setupControls();
+            setupMainMenuTabs();
+
+            // Tela de Advertência Inicial (Ao clicar em Prosseguir, entra no Menu Clássico FNAF)
+            document.getElementById('warning-agree-btn').addEventListener('click', () => {
+                // Inicia sistema sintético de áudio opressor
+                audioSys.init();
+
+                document.getElementById('warning-screen').style.opacity = '0';
+                setTimeout(() => {
+                    document.getElementById('warning-screen').classList.add('hidden');
+                    
+                    // Exibe o Menu Principal oficial
+                    const menu = document.getElementById('main-menu');
+                    menu.classList.remove('hidden');
+                    setTimeout(() => {
+                        menu.style.opacity = '1';
+                    }, 100);
+                }, 600);
+            });
+
+            document.getElementById('restart-btn').addEventListener('click', () => {
+                restartGame();
+            });
+
+            // Loop Ativo de Animação
+            animate();
+        };
     </script>
 </body>
 </html>
